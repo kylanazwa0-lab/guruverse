@@ -1,0 +1,126 @@
+/* ── HELPER: Normalize API response (snake_case → camelCase) ── */
+function normalizeMember(raw) {
+  if (!raw) return null;
+  return {
+    id:          raw.id           ?? raw.member_int_id ?? '',
+    memberId:    raw.member_id    ?? raw.memberId      ?? '',
+    fullName:    raw.full_name    ?? raw.fullName      ?? '',
+    username:    raw.username     ?? '',
+    institution: raw.institution  ?? '',
+    phone:       raw.phone        ?? '',
+    email:       raw.email        ?? '',
+    photo:       raw.photo        ?? raw.photo_base64  ?? null,
+    joinedAt:    raw.joined_at    ?? raw.joinedAt      ?? '',
+    referralCode:raw.referral_code ?? raw.referralCode ?? '',
+  };
+}
+
+/* ── APP ── */
+const App=()=>{
+  const [view,setView]=useState('register'); // register, menu, card, admin
+  const [mode,setMode]=useState('login');    // login | register
+  const [mem,setMem]=useState(null);
+  const [back,setBack]=useState('register');
+  const [isAdm,setIsAdm]=useState(false);
+
+  useEffect(()=>{
+    // Cek apakah ada sesi admin aktif
+    fetch('../modules/dashboard/get_members.php')
+      .then(r=>{ if(r.ok) setIsAdm(true); })
+      .catch(()=>{});
+
+    // Cek apakah member sudah login (ada sesi aktif)
+    fetch('../member/api/member.php')
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.success && d.member) {
+          setMem(normalizeMember(d.member));
+          setView('menu');
+        }
+      })
+      .catch(()=>{});
+  },[]);
+
+  const onReg = d => {
+    // d adalah response dari register API
+    const memberData = normalizeMember(d);
+    setMem(memberData);
+    setView('menu');
+  };
+
+  const onLogin = d => {
+    // d adalah objek member dari login API response
+    const memberData = normalizeMember(d);
+    setMem(memberData);
+    setView('menu');
+  };
+
+  const onAdminLogin = () => {
+    window.location.href = '../admin/index.php';
+  };
+
+  const onCard = m => {
+    setMem(m);
+    setBack(isAdm && view === 'admin' ? 'admin' : 'menu');
+    setView('card');
+  };
+
+  const onOut = async () => {
+    try {
+      await fetch('../modules/member/login/member_logout.php');
+    } catch {}
+    try {
+      await fetch('../modules/member/login/admin_logout.php');
+    } catch {}
+    setIsAdm(false);
+    setMem(null);
+    setView('register');
+    setMode('login');
+  };
+
+  const pillars=[
+    {t:'Guru Belajar',s:'Pengembangan diri dan kompetensi berkelanjutan',c:'#a78bfa'},
+    {t:'Guru Mengajar',s:'Aksi nyata dan kontribusi untuk dampak nyata',c:'#38bdf8'},
+    {t:'Guru Inspira',s:'Jejaring kolaborasi dan cerita inspiratif',c:'#34d399'},
+  ];
+
+  return(
+    <>
+      <Nav view={view} go={v=>{
+        if (v === 'register' && mem) { setView('menu'); }
+        else { setView(v); }
+      }}/>
+      {view==='register'&&(
+        <div className="page">
+          <div/>
+          <div className="page-body">
+            <div className="hleft">
+              <div className="badge fu"><span style={{width:6,height:6,borderRadius:'50%',background:'var(--accent)'}}/> Ekosistem Digital Guru Indonesia</div>
+              <h1 className="h1 fu1">Semesta Kompetensi,<br/><span className="gr">Untuk Guru Indonesia</span></h1>
+              <p className="sub fu2">Bergabunglah bersama ribuan guru profesional Indonesia dalam ekosistem yang membantu Anda terhubung, bertumbuh, dan kompeten.</p>
+              <div className="pillars fu3">
+                {pillars.map(p=>(
+                  <div key={p.t} className="pillar">
+                    <div className="pdot" style={{background:p.c}}/>
+                    <div><p>{p.t}</p><span>{p.s}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Cosmos/>
+            {mode === 'login' ? (
+              <LoginForm onOk={onLogin} onAdminOk={onAdminLogin} onSwitch={() => setMode('register')} />
+            ) : (
+              <RegForm onOk={onReg} onSwitch={() => setMode('login')} />
+            )}
+          </div>
+        </div>
+      )}
+      {view==='menu'&&mem&&<MemberMenu member={mem} onCard={()=>{setBack('menu'); setView('card');}} onOut={onOut}/>}
+      {view==='card'&&mem&&<Kartu m={mem} onBack={()=>setView(back)}/>}
+      {view==='admin'&&<Admin onCard={onCard} onOut={onOut}/>}
+    </>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
