@@ -1,0 +1,27 @@
+{
+  "judul": "Kuis Ice Breaking (Ala Wordwall)",
+  "tipe_game": "kuis_pilihan_ganda",
+  "deskripsi": "Kuis seru untuk mencairkan suasana di awal kelas!",
+  "pertanyaan": [
+    {
+      "soal": "Berapakah hasil dari 2²?",
+      "opsi": ["2", "4", "6", "8"],
+      "jawaban_benar": "4"
+    },
+    {
+      "soal": "Jika 4 X 2 adalah 8, berapa hasil dari 4 + 2?",
+      "opsi": ["8", "6", "10", "12"],
+      "jawaban_benar": "6"
+    },
+    {
+      "soal": "Manakah di bawah ini yang merupakan minuman paling sehat?",
+      "opsi": ["Susu Coklat", "Sirup Manis", "Air Putih", "Minuman Bersoda"],
+      "jawaban_benar": "Air Putih"
+    },
+    {
+      "soal": "Apa urutan warna bendera negara Indonesia?",
+      "opsi": ["Putih - Merah", "Merah - Putih", "Merah - Biru", "Kuning - Hijau"],
+      "jawaban_benar": "Merah - Putih"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+[
+    {
+        "id": "tb_01",
+        "kategori": "Team Building",
+        "judul": "Game: Chasing Colors",
+        "deskripsi": "Permainan kelompok interaktif untuk meningkatkan fokus dan kerjasama warna.",
+        "tipe": "pptx",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/20 Game Team Bulding\/chasing colors.pptx",
+        "ikon": "\ud83c\udfa8"
+    },
+    {
+        "id": "tb_02",
+        "kategori": "Team Building",
+        "judul": "Game: Say It Fast",
+        "deskripsi": "Aktivitas cepat untuk melatih respon dan kekompakan komunikasi kelas.",
+        "tipe": "pptx",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/20 Game Team Bulding\/say it.pptx",
+        "ikon": "\ud83d\udde3\ufe0f"
+    },
+    {
+        "id": "tb_03",
+        "kategori": "Team Building",
+        "judul": "Secret Mission",
+        "deskripsi": "Misi rahasia dalam kelompok untuk melatih problem solving.",
+        "tipe": "pptx",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/20 Game Team Bulding\/secret mission.pptx",
+        "ikon": "\ud83d\udd75\ufe0f"
+    },
+    {
+        "id": "kuis_01",
+        "kategori": "Kuis & Teka-teki",
+        "judul": "Kuis Interaktif Lengkap",
+        "deskripsi": "Kumpulan 30 kuis dan teka-teki untuk menyegarkan pikiran siswa.",
+        "tipe": "pptx",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/30 Kuis dan Teka Teki\/Kuis dan Teka-Teki.pptx",
+        "ikon": "\ud83e\udde9"
+    },
+    {
+        "id": "ib_01",
+        "kategori": "Ice Breaking",
+        "judul": "Ebook 100 Ice Breaking",
+        "deskripsi": "Buku referensi lengkap 100 aktivitas pemecah kebekuan di kelas.",
+        "tipe": "pdf",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/Ebook - 100 Ice Breaking\/Ebook_IceBreaking_AntiGaring_Trustco_FULL (1).pdf",
+        "ikon": "\ud83e\uddca"
+    },
+    {
+        "id": "prem_01",
+        "kategori": "Buku Premium",
+        "judul": "Ebook Game Based Learning",
+        "deskripsi": "Panduan premium menerapkan pembelajaran berbasis game secara mendalam.",
+        "tipe": "pdf",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/BONUS\/Ebook_Premium_GameBasedLearning.pdf",
+        "ikon": "\ud83d\udc8e"
+    },
+    {
+        "id": "up_1779633311",
+        "kategori": "Ice Breaking",
+        "judul": "chasing colors ",
+        "deskripsi": "Game master memilih dan menyebutkan sebuah warna, lalu peserta mengambil sebuah barang di rumahnya yang warnanya sama dengan warna yang disebutkan oleh game master.",
+        "tipe": "pptx",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/uploads\/1779633311_chasing_colors__1_.pptx",
+        "ikon": "\ud83d\udcfd\ufe0f",
+        "is_premium": true,
+        "link_pembelian": ""
+    },
+    {
+        "id": "game_1779676634",
+        "kategori": "Kuis & Teka-teki",
+        "judul": "Kuis Pengetahuan Umum Seru",
+        "deskripsi": "Jawab semua pertanyaan dengan teliti dan pilih jawaban yang paling benar!",
+        "tipe": "json",
+        "path": "\/guruverse\/asset\/docs\/gamifikasi\/uploads\/1779676634_kuis_pengetahuan_umum_seru.json",
+        "ikon": "\ud83c\udfae",
+        "is_premium": false,
+        "link_pembelian": ""
+    }
+]
