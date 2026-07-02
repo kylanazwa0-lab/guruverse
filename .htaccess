@@ -1,0 +1,40 @@
+# ============================================
+# /.htaccess — Root Security & Routing
+# Guruverse — Rumah Web / Hostinger
+# ============================================
+
+# ── 1. Matikan Directory Listing ──────────────
+Options -Indexes
+
+# ── 2. Aktifkan Rewrite Engine ────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ── 3. Blokir akses langsung ke folder sensitif ──
+    RewriteRule ^database(/.*)?$ - [F,L]
+    RewriteRule ^\.git(/.*)?$    - [F,L]
+    RewriteRule ^\.env$          - [F,L]
+
+    # ── 4. Izinkan akses ke /api/ dan /backend/public/ ──
+    RewriteRule ^api/(.*)$            api/$1 [L]
+    RewriteRule ^backend/public/(.*)$ backend/public/$1 [L]
+
+    # ── 5. Semua request lain → index.php (redirect ke app) ──
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ── 6. Security Headers ───────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── 7. Blokir akses ke file berbahaya ─────────
+<FilesMatch "\.(env|git|sql|log|lock|json|md|zip)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
