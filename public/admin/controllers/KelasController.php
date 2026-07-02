@@ -22,20 +22,22 @@ function kelas_create($conn, $data) {
         }
     }
     
-    $title        = $conn->real_escape_string($data['title'] ?? '');
-    $category     = $conn->real_escape_string($data['category'] ?? '');
-    $description  = $conn->real_escape_string($data['description'] ?? '');
-    $mentor       = $conn->real_escape_string($data['mentor_name'] ?? '');
+    $title        = $data['title'] ?? '';
+    $category     = $data['category'] ?? '';
+    $description  = $data['description'] ?? '';
+    $mentor       = $data['mentor_name'] ?? '';
     $duration     = (int)($data['duration_hours'] ?? 0);
     $status       = in_array($data['status'] ?? '', ['active','draft','archived']) ? $data['status'] : 'draft';
     $is_free      = (isset($data['is_paid']) && $data['is_paid'] == '1') ? 0 : 1;
-    $payment_link = $conn->real_escape_string($data['payment_link'] ?? '');
+    $payment_link = $data['payment_link'] ?? '';
     $cert_name_y  = (int)($data['cert_name_y'] ?? 500);
-    $cert_config  = $conn->real_escape_string($data['cert_config'] ?? '');
+    $cert_config  = $data['cert_config'] ?? '';
     
-    $conn->query("INSERT INTO gb_courses (title,category,description,mentor_name,duration_hours,status,is_free,payment_link,cert_template,cert_name_y,cert_config,created_at) 
-                  VALUES ('$title','$category','$description','$mentor',$duration,'$status',$is_free,'$payment_link','$cert_template',$cert_name_y,'$cert_config',NOW())");
-    return $conn->insert_id;
+    $stmt = $conn->prepare("INSERT INTO gb_courses (title,category,description,mentor_name,duration_hours,status,is_free,payment_link,cert_template,cert_name_y,cert_config,created_at) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("ssssisisisi", $title, $category, $description, $mentor, $duration, $status, $is_free, $payment_link, $cert_template, $cert_name_y, $cert_config);
+    $stmt->execute();
+    return $stmt->insert_id;
 }
 
 function kelas_update($conn, $id, $data) {
@@ -52,20 +54,27 @@ function kelas_update($conn, $id, $data) {
         }
     }
     
-    $title        = $conn->real_escape_string($data['title'] ?? '');
-    $category     = $conn->real_escape_string($data['category'] ?? '');
-    $description  = $conn->real_escape_string($data['description'] ?? '');
-    $mentor       = $conn->real_escape_string($data['mentor_name'] ?? '');
+    $title        = $data['title'] ?? '';
+    $category     = $data['category'] ?? '';
+    $description  = $data['description'] ?? '';
+    $mentor       = $data['mentor_name'] ?? '';
     $duration     = (int)($data['duration_hours'] ?? 0);
     $status       = in_array($data['status'] ?? '', ['active','draft','archived']) ? $data['status'] : 'draft';
     $is_free      = (isset($data['is_paid']) && $data['is_paid'] == '1') ? 0 : 1;
-    $payment_link = $conn->real_escape_string($data['payment_link'] ?? '');
+    $payment_link = $data['payment_link'] ?? '';
     $cert_name_y  = (int)($data['cert_name_y'] ?? 500);
-    $cert_config  = $conn->real_escape_string($data['cert_config'] ?? '');
+    $cert_config  = $data['cert_config'] ?? '';
     
-    $conn->query("UPDATE gb_courses SET title='$title',category='$category',description='$description',
-                  mentor_name='$mentor',duration_hours=$duration,status='$status',is_free=$is_free, payment_link='$payment_link', cert_name_y=$cert_name_y, cert_config='$cert_config' $cert_template_sql WHERE id=$id");
-    return $conn->affected_rows;
+    if ($cert_template_sql !== "") {
+        $stmt = $conn->prepare("UPDATE gb_courses SET title=?, category=?, description=?, mentor_name=?, duration_hours=?, status=?, is_free=?, payment_link=?, cert_name_y=?, cert_config=?, cert_template=? WHERE id=?");
+        $stmt->bind_param("ssssisisisii", $title, $category, $description, $mentor, $duration, $status, $is_free, $payment_link, $cert_name_y, $cert_config, $filename, $id);
+    } else {
+        $stmt = $conn->prepare("UPDATE gb_courses SET title=?, category=?, description=?, mentor_name=?, duration_hours=?, status=?, is_free=?, payment_link=?, cert_name_y=?, cert_config=? WHERE id=?");
+        $stmt->bind_param("ssssisisisi", $title, $category, $description, $mentor, $duration, $status, $is_free, $payment_link, $cert_name_y, $cert_config, $id);
+    }
+    
+    $stmt->execute();
+    return $stmt->affected_rows;
 }
 
 function kelas_delete($conn, $id) {

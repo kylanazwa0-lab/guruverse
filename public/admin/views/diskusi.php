@@ -28,7 +28,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         // user_id = 0 marks Admin
-        $conn->query("INSERT INTO gb_discussion_replies (discussion_id, user_id, body, attachment_path, created_at) VALUES ($did, 0, '$body', $attachment_path, NOW())");
+        $stmt = $conn->prepare("INSERT INTO gb_discussion_replies (discussion_id, user_id, body, attachment_path, created_at) VALUES (?, 0, ?, ?, NOW())");
+        
+        // Since attachment_path can be raw 'NULL' or "'path'", we need to handle it properly
+        $att_val = null;
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] == UPLOAD_ERR_OK && isset($filename)) {
+            $att_val = '/guruverse/uploads/discussions/' . $filename;
+        }
+        $stmt->bind_param("iss", $did, $_POST['body'], $att_val);
+        $stmt->execute();
+        
         $conn->query("UPDATE gb_discussions SET replies_count = replies_count + 1 WHERE id=$did");
         
         // --- TRIGGER BOT (AUTO-RESPONDER) ---
@@ -44,8 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $cat = $conn->real_escape_string($_POST['category']);
         $body = $conn->real_escape_string($_POST['body']);
         // user_id = 0 marks Admin
-        $conn->query("INSERT INTO gb_discussions (user_id, title, body, category, created_at) VALUES (0, '$title', '$body', '$cat', NOW())");
-        $new_id = $conn->insert_id;
+        $stmt = $conn->prepare("INSERT INTO gb_discussions (user_id, title, body, category, created_at) VALUES (0, ?, ?, ?, NOW())");
+        $stmt->bind_param("sss", $_POST['title'], $_POST['body'], $_POST['category']);
+        $stmt->execute();
+        $new_id = $stmt->insert_id;
         echo "<script>window.location='?mod=diskusi&topic_id=$new_id';</script>";
         exit;
     }

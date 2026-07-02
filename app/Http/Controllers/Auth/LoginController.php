@@ -74,6 +74,15 @@ class LoginController extends Controller
                 $request->session()->put('member_logged_in', true);
                 $request->session()->put('member_login_at', time());
 
+                // FIX FATAL BUG: Sinkronisasi dengan sesi Native PHP
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                $_SESSION['member_id'] = $member->member_id;
+                $_SESSION['member_int_id'] = (int) $member->id;
+                $_SESSION['member_logged_in'] = true;
+                $_SESSION['member_login_at'] = time();
+
                 return redirect()->intended('/dashboard');
             }
         }
@@ -92,6 +101,13 @@ class LoginController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // FIX FATAL BUG: Hapus juga sesi Native PHP
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        session_unset();
+        session_destroy();
 
         return redirect('/');
     }
