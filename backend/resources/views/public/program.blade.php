@@ -62,18 +62,20 @@
 
 /* Light mode: swiper slide cards */
 [data-theme="light"] .pslide-inner {
-  background: #ffffff;
-  border-color: #D2E3EB;
-  box-shadow: 0 8px 32px rgba(9, 60, 93, 0.10);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 20px 40px rgba(9, 60, 93, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 [data-theme="light"] .belajar-slide {
-  background: linear-gradient(135deg, #ffffff 60%, rgba(37, 99, 235, 0.06)) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 40%, rgba(219, 234, 254, 0.5)) !important;
 }
 [data-theme="light"] .mengajar-slide {
-  background: linear-gradient(135deg, #ffffff 60%, rgba(245, 158, 11, 0.06)) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 40%, rgba(254, 243, 199, 0.5)) !important;
 }
 [data-theme="light"] .inspira-slide {
-  background: linear-gradient(135deg, #ffffff 60%, rgba(236, 72, 153, 0.06)) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 40%, rgba(252, 231, 243, 0.5)) !important;
 }
 
 /* Light mode: slide text */
@@ -383,72 +385,164 @@
 }
 
 
-/* ── CLOSING BANNER ── */
-.closing-banner-custom {
-  position: relative;
-  background: linear-gradient(135deg, #1e3a8a 0%, #093C5D 100%);
-  border-radius: 24px;
-  padding: 40px 48px;
-  overflow: hidden; /* Prevent rectangular image from sticking out */
-  box-shadow: 0 12px 24px rgba(9, 60, 93, 0.15);
-  margin-top: 60px;
+/* ── EDITORIAL GRID (NO CARDS) ── */
+.editorial-grid-section {
+  max-width: 1200px;
+  margin: 60px auto 140px;
+  padding: 0 5%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 80px;
+  align-items: flex-start;
+}
+.eg-item {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  flex-direction: column;
 }
-.closing-avatar-left {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 45%;
-  object-fit: cover;
-  object-position: top center;
-  z-index: 1;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
-  mask-image: linear-gradient(to right, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
-  opacity: 0.8;
+.eg-item:nth-child(2) {
+  margin-top: 80px;
 }
-.closing-content {
-  max-width: 55%;
-  margin: 0;
-  text-align: right;
-  color: #fff;
+.eg-item:nth-child(3) {
+  margin-top: 160px;
+}
+.eg-num {
+  font-size: 6rem;
+  font-weight: 900;
+  line-height: 0.8;
+  color: var(--p-text);
+  opacity: 0.05;
+  margin-bottom: -20px;
+  z-index: 0;
+}
+.eg-title {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 20px;
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
-.closing-title-text {
-  font-size: clamp(20px, 3vw, 28px);
-  font-weight: 800;
-  margin-bottom: 12px;
-  line-height: 1.2;
-}
-.closing-desc-text {
-  font-size: 0.95rem;
-  opacity: 0.9;
-  line-height: 1.5;
+.eg-line {
+  width: 60px;
+  height: 4px;
   margin-bottom: 24px;
+  border-radius: 4px;
 }
-.closing-action-btn {
+.eg-desc {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--p-text-muted);
+}
+@media (max-width: 992px) {
+  .editorial-grid-section { grid-template-columns: 1fr; gap: 60px; margin-bottom: 60px; }
+  .eg-item:nth-child(2), .eg-item:nth-child(3) { margin-top: 0; }
+  .eg-num { font-size: 5rem; }
+}
+
+/* ── PREMIUM MESH CTA ── */
+.premium-cta-section {
+  position: relative;
+  width: 100%;
+  padding: 80px 20px;
+  overflow: hidden;
+  border-radius: 32px;
+  text-align: center;
+  background: var(--p-card-bg);
+  border: 1px solid var(--p-border);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+  margin-top: 40px;
+  isolation: isolate;
+}
+
+/* Animated gradient blobs */
+.cta-blob {
+  position: absolute;
+  filter: blur(80px);
+  z-index: -1;
+  border-radius: 50%;
+  animation: floatCTA 10s infinite alternate ease-in-out;
+}
+.cta-blob-1 {
+  width: 400px; height: 400px;
+  background: rgba(37, 99, 235, 0.4);
+  top: -100px; left: -100px;
+}
+.cta-blob-2 {
+  width: 350px; height: 350px;
+  background: rgba(236, 72, 153, 0.3);
+  bottom: -100px; right: -50px;
+  animation-delay: -5s;
+}
+.cta-blob-3 {
+  width: 300px; height: 300px;
+  background: rgba(245, 158, 11, 0.3);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation: floatCTA 15s infinite alternate ease-in-out reverse;
+}
+
+@keyframes floatCTA {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 50px) scale(1.2); }
+}
+
+[data-theme="light"] .cta-blob { opacity: 0.7; }
+[data-theme="dark"] .cta-blob { opacity: 0.4; }
+
+.pcta-title {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--p-text);
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+.pcta-desc {
+  font-size: 1rem;
+  color: var(--p-text-muted);
+  max-width: 500px;
+  margin: 0 auto 30px;
+  line-height: 1.6;
+}
+.pcta-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 36px;
-  background: #ffffff;
-  color: #093C5D;
-  font-weight: 800;
+  gap: 10px;
+  padding: 14px 32px;
   font-size: 1rem;
-  border-radius: 16px;
+  font-weight: 800;
+  color: #fff;
+  background: #0f172a;
+  border-radius: 9999px;
   text-decoration: none;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+  position: relative;
   cursor: pointer;
 }
-.closing-action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.2);
+.pcta-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: all 0.6s ease;
+}
+.pcta-btn:hover::before {
+  left: 100%;
+}
+.pcta-btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  color: #fff;
+}
+[data-theme="dark"] .pcta-btn {
+  background: #ffffff;
+  color: #0f172a;
+}
+[data-theme="dark"] .pcta-btn::before {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
 }
 
 /* ── RESPONSIVE ── */
@@ -492,7 +586,23 @@
     padding: 48px 24px;
     justify-content: center;
   }
+/* ===== ANIMATION SYSTEM (Zajno-style) ===== */
+.gv-reveal {
+  opacity: 0;
+  transform: translateY(60px) rotate(1.5deg);
+  transform-origin: left center;
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
+.gv-reveal.is-visible { opacity: 1; transform: translateY(0) rotate(0deg); }
+.gv-reveal.delay-1 { transition-delay: 0.1s; }
+.gv-reveal.delay-2 { transition-delay: 0.2s; }
+.gv-reveal.delay-3 { transition-delay: 0.3s; }
+.gv-reveal.delay-4 { transition-delay: 0.4s; }
+.gv-parallax-wrap { overflow: hidden; border-radius: inherit; }
+.gv-parallax-img { transform: scale(1.12); will-change: transform; display: block; width: 100%; transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+.gv-reveal.is-visible .gv-parallax-img { transform: scale(1); }
 </style>
 
 <div class="prog-wrapper">
@@ -501,37 +611,37 @@
     <!-- HERO SECTION -->
     <section class="hero-section-custom">
       <div class="hero-content-prog">
-        <div class="hero-badge-prog">
+        <div class="hero-badge-prog gv-reveal">
           <span>Our Programs</span>
         </div>
-        <h1 class="hero-title-prog">
+        <h1 class="hero-title-prog gv-reveal delay-1">
           Ekosistem Pemberdayaan <br>
           <span class="text-highlight">Guru Masa Depan</span>
         </h1>
-        <p class="hero-desc-prog">
+        <p class="hero-desc-prog gv-reveal delay-2">
           Guruverse.ID menyediakan platform belajar, mengajar, dan berkolaborasi yang dirancang khusus untuk meningkatkan kompetensi, kreativitas, dan kesejahteraan guru di seluruh Indonesia.
         </p>
       </div>
-      <div class="hero-image-area">
-        <img src="{{ asset('asset/img/hero-teachers.png') }}" class="hero-main-img" alt="Guruverse Teachers">
+      <div class="hero-image-area gv-parallax-wrap gv-reveal delay-3" style="border-radius:32px;">
+        <img src="{{ asset('asset/img/hero-teachers.png') }}" class="hero-main-img gv-parallax-img" alt="Guruverse Teachers">
       </div>
     </section>
 
     <!-- HORIZONTAL PILLS -->
     <div class="pills-grid">
-      <div class="pill-card-custom">
+      <div class="pill-card-custom gv-reveal delay-1">
         <div>
           <div class="pill-text-title">Guru Belajar</div>
           <div class="pill-text-sub">Tumbuh</div>
         </div>
       </div>
-      <div class="pill-card-custom">
+      <div class="pill-card-custom gv-reveal delay-2">
         <div>
           <div class="pill-text-title">Guru Mengajar</div>
           <div class="pill-text-sub">Berdampak</div>
         </div>
       </div>
-      <div class="pill-card-custom">
+      <div class="pill-card-custom gv-reveal delay-3">
         <div>
           <div class="pill-text-title">Guru Inspira</div>
           <div class="pill-text-sub">Menginspirasi</div>
@@ -544,7 +654,7 @@
       <div class="swiper-wrapper">
         
         <!-- SLIDE 1: GURU BELAJAR -->
-        <div class="swiper-slide swiper-slide-custom">
+        <div class="swiper-slide swiper-slide-custom gv-reveal delay-1">
           <div class="pslide-inner belajar-slide">
             <div class="pslide-content">
               <div class="pslide-badge" style="background: rgba(37,99,235,.1); color: #2563eb;">Pilar 1 — Learn</div>
@@ -563,7 +673,7 @@
         </div>
 
         <!-- SLIDE 2: GURU MENGAJAR -->
-        <div class="swiper-slide swiper-slide-custom">
+        <div class="swiper-slide swiper-slide-custom gv-reveal delay-2">
           <div class="pslide-inner mengajar-slide">
             <div class="pslide-content">
               <div class="pslide-badge" style="background: rgba(245,158,11,.1); color: #f59e0b;">Pilar 2 — Teach</div>
@@ -582,7 +692,7 @@
         </div>
 
         <!-- SLIDE 3: GURU INSPIRA -->
-        <div class="swiper-slide swiper-slide-custom">
+        <div class="swiper-slide swiper-slide-custom gv-reveal delay-3">
           <div class="pslide-inner inspira-slide">
             <div class="pslide-content">
               <div class="pslide-badge" style="background: rgba(236,72,153,.1); color: #ec4899;">Pilar 3 — Inspire</div>
@@ -608,15 +718,42 @@
       <div class="swiper-button-next"></div>
     </div>
 
-    <!-- CLOSING BANNER -->
-    <div class="closing-banner-custom">
-      <img src="{{ asset('asset/img/modern_teacher_illustration.jfif') }}" class="closing-avatar-left" alt="Teacher Left" onerror="this.style.display='none'">
-      <div class="closing-content">
-        <h3 class="closing-title-text">Belajar. Mengajar. Menginspirasi.</h3>
-        <p class="closing-desc-text">Dengan tiga pilar ini, Guruverse.ID membentuk ekosistem guru masa depan: guru yang kompeten, berdampak, dan menginspirasi generasi penerus bangsa.</p>
-        <button class="closing-action-btn" onclick="window.location.href='{{ route('register') }}'">
-          Gabung Sekarang — Gratis
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-left:6px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    <!-- EDITORIAL GRID DESCRIPTIONS -->
+    <div class="editorial-grid-section">
+      <div class="eg-item gv-reveal delay-1">
+        <div class="eg-num">01</div>
+        <h4 class="eg-title" style="color:#2563eb;">Guru Belajar</h4>
+        <div class="eg-line" style="background:#2563eb;"></div>
+        <p class="eg-desc">Guru Belajar adalah program komprehensif yang didesain khusus untuk meningkatkan kompetensi pedagogik, profesional, dan kepribadian Anda. Melalui rangkaian kursus intensif interaktif, seri webinar eksklusif dengan pakar pendidikan, hingga program sertifikasi resmi, kami siap menemani perjalanan Anda menjadi pendidik abad 21 yang adaptif, inovatif, dan diakui secara nasional.</p>
+      </div>
+
+      <div class="eg-item gv-reveal delay-2">
+        <div class="eg-num">02</div>
+        <h4 class="eg-title" style="color:#d97706;">Guru Mengajar</h4>
+        <div class="eg-line" style="background:#d97706;"></div>
+        <p class="eg-desc">Lebih dari sekadar mengajar, ini adalah ruang aktualisasi diri. Guru Mengajar memfasilitasi Anda untuk berbagi modul ajar, praktik baik (best practice), dan strategi pembelajaran kreatif. Dengan dukungan Dashboard Personal terintegrasi, fitur Gamifikasi untuk memotivasi siswa, dan Impact Tracker, wujudkan pengalaman belajar yang bermakna.</p>
+      </div>
+
+      <div class="eg-item gv-reveal delay-3">
+        <div class="eg-num">03</div>
+        <h4 class="eg-title" style="color:#db2777;">Guru Inspira</h4>
+        <div class="eg-line" style="background:#db2777;"></div>
+        <p class="eg-desc">Sinergi adalah kunci transformasi. Guru Inspira menghadirkan ruang kolaborasi tanpa batas wilayah, di mana Anda dapat membangun jejaring profesional yang solid, merintis kolaborasi proyek lintas daerah, serta menemukan dukungan moral dari sesama pejuang pendidikan. Melalui diskusi interaktif di forum komunitas dan kurasi cerita inspiratif, temukan kembali energi dan semangat mengabdi Anda setiap harinya.</p>
+      </div>
+    </div>
+
+    <!-- PREMIUM MESH CTA -->
+    <div class="premium-cta-section gv-reveal delay-1">
+      <div class="cta-blob cta-blob-1"></div>
+      <div class="cta-blob cta-blob-2"></div>
+      <div class="cta-blob cta-blob-3"></div>
+      
+      <div style="position:relative; z-index:2;">
+        <h3 class="pcta-title">Satu Langkah Kecil,<br>Dampak Tanpa Batas.</h3>
+        <p class="pcta-desc">Waktunya beralih dari rutinitas ke transformasi. Bergabunglah dengan ribuan pendidik lainnya untuk memajukan pendidikan Indonesia.</p>
+        <button class="pcta-btn" onclick="window.location.href='{{ route('register') }}'">
+          Mulai Perjalanan Anda
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
     </div>
@@ -631,6 +768,10 @@
     centeredSlides: true,
     spaceBetween: 30,
     loop: true,
+    autoplay: {
+      delay: 1500,
+      disableOnInteraction: false,
+    },
     pagination: {
       el: '.swiper-pagination',
       clickable: true,

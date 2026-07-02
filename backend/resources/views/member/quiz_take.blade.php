@@ -161,7 +161,7 @@
           return;
       }
 
-      fetch('/api/get_course_modules.php?course_id=' + courseId)
+      fetch('/api/get-course-modules?course_id=' + courseId)
         .then(res => res.json())
         .then(res => {
             if (res.success) {
@@ -326,7 +326,7 @@
       // Get CSRF Token from meta tag
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
       
-      fetch('/api/complete_module.php', {
+      fetch('/api/complete-module', {
           method: 'POST',
           headers: {
               'X-CSRF-TOKEN': csrfToken
@@ -334,18 +334,41 @@
           body: formData
       }).then(res => res.json())
         .then(res => {
-            if(res.success) {
-                if (score >= 75) { 
-                    gbShowAlert('Lulus! 🎉', `Selamat! Anda lulus dengan nilai ${score}. Modul berikutnya telah dibuka!`, 'success');
-                } else {
-                    gbShowAlert('Belum Lulus 😢', `Nilai Anda ${score}. Minimal kelulusan adalah 75. Silakan coba lagi.`, 'error');
-                }
-                
-                // Redirect back to modul page after alert OK is clicked
-                document.getElementById('gbModalOk').onclick = function() {
-                    window.location.href = `/modul?course_id=${cpCurrentCourse.id}`;
-                };
-            } else {
+              if(res.success) {
+                  if (score >= 75) { 
+                      gbShowAlert('Lulus! 🎉', `Selamat! Anda lulus dengan nilai ${score}. Modul berikutnya telah dibuka!`, 'success');
+                      document.getElementById('gbModalOk').onclick = function() {
+                          window.location.href = `/modul?course_id=${cpCurrentCourse.id}`;
+                      };
+                  } else {
+                      const modal = document.getElementById('gbCustomModal');
+                      if (modal) {
+                          modal.style.display = 'flex';
+                          document.getElementById('gbModalContainer').style.maxWidth = '400px';
+                          document.getElementById('gbModalTitle').textContent = 'Belum Lulus 😢';
+                          document.getElementById('gbModalBody').innerHTML = `Nilai Anda ${score}. Minimal kelulusan adalah 75. Silakan coba lagi.`;
+                          
+                          const cancelBtn = document.getElementById('gbModalCancel');
+                          cancelBtn.style.display = 'inline-flex';
+                          cancelBtn.textContent = 'Keluar';
+                          cancelBtn.onclick = function() {
+                              window.location.href = `/modul?course_id=${cpCurrentCourse.id}`;
+                          };
+                          
+                          const okBtn = document.getElementById('gbModalOk');
+                          okBtn.textContent = 'Perbaiki';
+                          okBtn.onclick = function() {
+                              window.location.reload();
+                          };
+                      } else {
+                          if (confirm(`Belum Lulus 😢\nNilai Anda ${score}. Minimal kelulusan adalah 75. Coba lagi?`)) {
+                              window.location.reload();
+                          } else {
+                              window.location.href = `/modul?course_id=${cpCurrentCourse.id}`;
+                          }
+                      }
+                  }
+              } else {
                 alert('Gagal menyimpan progress: ' + (res.message || 'Unknown error'));
             }
         })

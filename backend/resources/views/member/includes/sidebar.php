@@ -11,7 +11,7 @@
     <img src="/guruverse/asset/img/FA Logo Guruverse.ID - nrgative.png" class="brand-logo-dark" alt="GuruVerse.ID" style="height:28px;width:auto;object-fit:contain;display:none">
   </div>
 
-  <a href="/guruverse/guru-belajar/member/home_member.php" style="display:flex; align-items:center; gap:8px; padding:12px 20px; font-size:12px; font-weight:700; color:rgba(255,255,255,0.6); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.07); transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
+  <a href="/guruverse/guru-belajar/member/home_member.php" class="sidebar-back-link" style="display:flex; align-items:center; gap:8px; padding:12px 20px; font-size:12px; font-weight:700; color:rgba(255,255,255,0.6); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.07); transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     Kembali ke Portal
   </a>

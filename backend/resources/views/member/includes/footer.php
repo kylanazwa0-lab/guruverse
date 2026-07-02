@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (contentState) contentState.style.display = 'none';
 
-    fetch('api/get_course_modules.php?course_id=' + course_id)
+    fetch('/api/get-course-modules?course_id=' + course_id)
       .then(res => res.json())
       .then(res => {
         if (res.success) {
@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('score', score);
       formData.append('answers_json', JSON.stringify(answers));
       
-      fetch('api/complete_module.php', {
+      fetch('/api/complete-module', {
           method: 'POST',
           body: formData
       }).then(res => res.json())

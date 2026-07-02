@@ -217,6 +217,7 @@
   <main class="main-layout">
     @yield('content')
   </main>
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 </div>
 
 <!-- MODAL LOGOUT -->
@@ -259,7 +260,13 @@ function toggleDarkMode() {
 }
 
 function toggleSidebar() {
-  document.body.classList.toggle('sidebar-minimized');
+  if (window.innerWidth >= 992) {
+    document.body.classList.toggle('sidebar-minimized');
+    document.body.classList.remove('sidebar-open');
+  } else {
+    document.body.classList.toggle('sidebar-open');
+    document.body.classList.remove('sidebar-minimized');
+  }
 }
 
 function toggleNotif() {

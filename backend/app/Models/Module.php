@@ -11,14 +11,13 @@ class Module extends Model
 
     protected $fillable = [
         'course_id', 'title', 'content', 'video_url',
-        'duration_minutes', 'order', 'is_active',
+        'duration_minutes', 'is_active',
         'module_number', 'type', 'description', 'file_path', 'quiz_data', 'order_index'
     ];
 
     protected $casts = [
         'is_active'        => 'boolean',
         'duration_minutes' => 'integer',
-        'order'            => 'integer',
     ];
 
     public function course(): BelongsTo

@@ -136,7 +136,7 @@
       </button>
     </div>
   @else
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:20px;">
+    <div class="kelas-grid">
       @foreach ($ebooks as $eb)
         <div class="card p-0 overflow-hidden group hover:shadow-xl transition-all" style="border:1px solid var(--c-border-light)">
             <div style="position:relative; width:100%; height:220px; background:var(--c-bg-card); display:flex; align-items:center; justify-content:center; overflow:hidden">

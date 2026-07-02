@@ -1,573 +1,496 @@
 @php
   $member = Auth::guard('web')->user();
+  $firstName = explode(' ', $member->full_name ?? 'Member')[0];
   
-  $parts = explode(' ', $member->full_name ?? 'Member');
-  $user_initials = strtoupper(substr($parts[0] ?? 'M', 0, 1));
-  if (count($parts) > 1 && isset($parts[1][0])) {
-      $user_initials .= strtoupper(substr($parts[1], 0, 1));
-  } else {
-      $user_initials .= strtoupper(substr($parts[0] ?? 'M', 1, 1));
-  }
-
-  $photo = '/asset/img/default-avatar.png';
+  $photo = '/asset/img/default_avatar.svg';
   if (!empty($member->photo_base64)) {
       $photo = 'data:image/png;base64,' . $member->photo_base64;
   } elseif (!empty($member->photo_path)) {
-      // Clean path if it starts with public or similar
       $path = str_replace('public/', '', $member->photo_path);
       $photo = asset($path);
   }
 
-  $memberData = [
-      'memberId'    => $member->member_id ?? '',
-      'fullName'    => $member->full_name ?? '',
-      'username'    => $member->username ?? '',
-      'email'       => $member->email ?? '',
-      'institution' => $member->institution ?? '',
-      'phone'       => $member->phone ?? '',
-      'photo'       => $photo,
-      'joinedAt'    => $member->created_at ? $member->created_at->toISOString() : now()->toISOString(),
-  ];
+  $unread_notif_count = \App\Models\Notification::where('user_id', $member->id)->where('is_read', 0)->count();
+  $notifications = \App\Models\Notification::where('user_id', $member->id)->orderBy('created_at', 'desc')->limit(10)->get();
 @endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Guruverse.id &mdash; Panel Member</title>
 <link rel="icon" type="image/png" href="/asset/img/logo guruverse FA.ai.png"/>
-<title>Guruverse.id &mdash; Dashboard Anggota</title>
-
-<!-- 1. React -->
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-<!-- 2. Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
-<!-- 3. Babel Standalone -->
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<!-- 4. Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet"/>
-
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
-:root{
-  --ink:#0f0c29;
-  --deep:#1a1560;
-  --purple:#6d28d9;
-  --violet:#7c3aed;
-  --accent:#a78bfa;
-  --sky:#38bdf8;
-  --nav-h:64px;
-}
+  :root {
+    --bg-main: #f4f7f9;
+    --card-bg: #ffffff;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+  }
+  [data-theme="dark"] {
+    --bg-main: #0f172a;
+    --card-bg: #1e293b;
+    --text-dark: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+  body { background: var(--bg-main); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s ease, color 0.3s ease; }
+  
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; background: var(--card-bg); border-bottom: 1px solid var(--border); margin-bottom: 32px; transition: background-color 0.3s ease, border-color 0.3s ease;}
+  .header .logo { display: flex; align-items: center; gap: 12px; margin-left: 24px;}
+  .header .logo img { height: 32px; }
+  .header .logo-text h1 { font-size: 1.1rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+  .header .logo-text p { font-size: 0.75rem; color: var(--text-muted); font-weight: 500;}
+  .header-actions { display: flex; align-items: center; gap: 20px; margin-right: 24px;}
+  .notif-btn { position: relative; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; background: none; cursor: pointer; color: var(--text-muted);}
+  .notif-badge { position: absolute; top: -2px; right: -2px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+  .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .user-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .user-info h4 { font-size: 0.9rem; font-weight: 700; color: var(--text-dark); }
+  .user-info p { font-size: 0.75rem; color: var(--text-muted); }
 
-/* ── Light Mode Overrides ── */
-[data-theme="dark"] .brand-logo-light { display: none !important; }
-[data-theme="dark"] .brand-logo-dark { display: block !important; }
-[data-theme="light"] .brand-logo-light { display: block !important; }
-[data-theme="light"] .brand-logo-dark { display: none !important; }
+  /* Hero */
+  .hero { background: linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6); border-radius: 24px; padding: 48px; position: relative; overflow: hidden; color: #fff; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; box-shadow: 0 12px 32px rgba(99,102,241,0.15);}
+  .hero-content { position: relative; z-index: 2; max-width: 60%; }
+  .hero-pill { background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.3);}
+  .hero h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
+  .hero p { font-size: 1rem; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 32px;}
+  .hero-actions { display: flex; gap: 12px; }
+  .btn-hero { width: 48px; height: 48px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
+  .btn-hero.white { background: #fff; color: var(--primary); }
+  .btn-hero.glass { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);}
+  
+  .hero-level { position: absolute; right: 280px; bottom: 48px; background: var(--card-bg); padding: 8px 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; color: var(--text-dark); font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 3; transition: background-color 0.3s ease, color 0.3s ease;}
+  .hero-level-icon { background: #fef08a; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: #ca8a04;}
+  
+  .hero-character { position: absolute; right: 48px; top: -20px; width: 280px; height: 280px; background: #1e293b; border-radius: 50%; border: 4px solid rgba(255,255,255,0.2); overflow: hidden; z-index: 2;}
+  .hero-character img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8;}
+  .circle-dec { position: absolute; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; }
 
-[data-theme="light"] {
-  --ink: #f5f8fa;
-  --deep: #ffffff;
-  --purple: #093c5d;
-  --violet: #357a9e;
-  --accent: #093c5d;
-  --sky: #76d4e2;
-}
-[data-theme="light"] body {
-  color: #092b40;
-}
-[data-theme="light"] .nav {
-  background: rgba(255,255,255,0.9);
-  border-bottom: 1px solid rgba(9,60,93,0.1);
-}
-[data-theme="light"] .nav-logo span {
-  color: #093c5d;
-}
-[data-theme="light"] .cshell {
-  background: var(--deep);
-  box-shadow: 0 16px 40px rgba(9,60,93,0.1), 0 0 0 1px rgba(9,60,93,0.05);
-}
-[data-theme="light"] .kpage {
-  background: var(--ink);
-}
-[data-theme="light"] .infobox {
-  background: rgba(9,60,93,0.03);
-  border: 1px solid rgba(9,60,93,0.08);
-}
-[data-theme="light"] .back-lbl {
-  color: rgba(9,60,93,0.5);
-}
-[data-theme="light"] .back-val {
-  color: #092b40;
-}
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;}
+  .stat-card { background: #fff; padding: 24px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 16px; position: relative;}
+  .stat-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .stat-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+  .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text-dark); }
+  .stat-menu { position: absolute; right: 20px; top: 20px; color: var(--border); cursor: pointer;}
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{min-height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--ink);color:#fff;overflow-x:hidden;overflow-y:auto;}
-body::-webkit-scrollbar{display:none;}
-.mono{font-family:'JetBrains Mono',monospace;}
+  /* Portals */
+  .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;}
+  .section-title h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;}
+  .section-title h2 { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); }
+  .section-link { color: var(--primary); font-size: 0.9rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;}
+  
+  .portal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px;}
+  .portal-card { background: var(--card-bg); border-radius: 24px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; text-decoration: none; transition: transform 0.2s, background-color 0.3s ease, color 0.3s ease;}
+  .portal-card:hover { transform: translateY(-4px); }
+  .portal-img { aspect-ratio: 16/9; width: 100%; object-fit: cover; }
+  .portal-body { padding: 24px; display: flex; flex-direction: column; flex: 1;}
+  .portal-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px;}
+  .portal-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+  .portal-title { font-size: 1.1rem; font-weight: 800; color: var(--text-dark); margin-bottom: 2px;}
+  .portal-meta { font-size: 0.75rem; font-weight: 700; }
+  .portal-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px; flex: 1;}
+  .portal-btn { width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: 0.2s;}
 
-/* NAV */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;background:rgba(15,12,41,.82);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.07);}
-.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
-.nav-logo img{height:34px;object-fit:contain;}
-.nav-logo span{font-weight:900;font-size:.95rem;color:#fff;letter-spacing:-.02em;}
+  /* Belajar */
+  .p-belajar .portal-icon { background: #eff6ff; color: #3b82f6; }
+  .p-belajar .portal-meta { color: #3b82f6; }
+  .p-belajar .portal-btn { background: #eff6ff; color: #3b82f6; }
+  .p-belajar:hover .portal-btn { background: #3b82f6; color: #fff; }
 
-/* ANIMATIONS */
-@keyframes twinkle{0%,100%{opacity:var(--op,.5);transform:scale(1)}50%{opacity:.08;transform:scale(.4)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  /* Mengajar */
+  .p-mengajar .portal-icon { background: #ecfdf5; color: #10b981; }
+  .p-mengajar .portal-meta { color: #10b981; }
+  .p-mengajar .portal-btn { background: #ecfdf5; color: #10b981; }
+  .p-mengajar:hover .portal-btn { background: #10b981; color: #fff; }
 
-.sp{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
-.bl{animation:blink 1.3s ease-in-out infinite;}
+  /* Inspira */
+  .p-inspira .portal-icon { background: #faf5ff; color: #a855f7; }
+  .p-inspira .portal-meta { color: #a855f7; }
+  .p-inspira .portal-btn { background: #faf5ff; color: #a855f7; }
+  .p-inspira:hover .portal-btn { background: #a855f7; color: #fff; }
 
-/* KARTU PAGE */
-.kpage{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(var(--nav-h) + 1rem) 1rem 1.5rem;gap:.75rem;overflow-y:auto;}
-.kpage::-webkit-scrollbar{display:none;}
-.ktopbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:460px;}
+  /* 2 Cols */
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;}
+  .list-card { background: var(--card-bg); border-radius: 24px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: background-color 0.3s ease;}
+  .list-item { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 24px; transition: border-color 0.3s ease;}
+  .list-item:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0;}
+  .item-icon { width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;}
+  .item-content { flex: 1; }
+  .item-title { font-weight: 700; color: var(--text-dark); margin-bottom: 4px; font-size: 0.95rem;}
+  .item-time { font-size: 0.8rem; color: var(--text-muted); }
+  .item-action { flex-shrink: 0; }
+  .btn-sm { padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: none;}
+  .btn-blue { background: #eff6ff; color: #3b82f6; }
+  .btn-purple { background: #faf5ff; color: #a855f7; }
 
-/* CARD SHELL */
-.cshell{position:relative;width:100%;aspect-ratio:1.586/1;border-radius:1.5rem;overflow:hidden;background:var(--deep);box-shadow:0 24px 60px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.07);}
-.cin{position:relative;z-index:10;height:100%;display:flex;flex-direction:column;padding:1.3rem 1.5rem;}
+  .progress-bar { width: 100%; height: 6px; background: #f1f5f9; border-radius: 3px; margin-top: 12px; overflow: hidden; position: relative;}
+  .progress-fill { height: 100%; border-radius: 3px; }
 
-/* FLIP CARD */
-.flip-scene{width:100%;max-width:460px;perspective:1200px;}
-.flip-card{position:relative;width:100%;aspect-ratio:1.586/1;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,0,.2,1);}
-.flip-card.flipped{transform:rotateY(180deg);}
-.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:1.5rem;overflow:hidden;}
-.face-back{transform:rotateY(180deg);}
-
-/* INFO BOX */
-.infobox{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:1.1rem;padding:.85rem 1.1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.7rem;width:100%;max-width:460px;}
-
-/* BACK CARD details */
-.back-row{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;}
-.back-lbl{font-size:5.5px;text-transform:uppercase;letter-spacing:.22em;color:rgba(255,255,255,.38);font-weight:700;}
-.back-val{font-size:.72rem;font-weight:700;color:#fff;line-height:1.25;}
-
-/* DASHBOARD STYLES */
-.dash-container{background:#f8fafc;color:#1e293b;min-height:100vh;position:relative;z-index:200;display:flex;flex-direction:column;animation:fadeUp .5s ease-out;}
-.dash-header{height:64px;padding:0 5%;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #f1f5f9;position:sticky;top:0;z-index:10;}
-.dash-logo{display:flex;align-items:center;gap:10px;}
-.dash-logo img{height:32px;}
-.dash-logo span{font-weight:800;font-size:1rem;color:#0f172a;}
-.dash-actions{display:flex;gap:12px;}
-.dash-btn-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #3b82f6;color:#3b82f6;padding:.5rem 1.1rem;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;}
-.dash-btn-card:hover{background:#3b82f6;color:#fff;}
-.dash-btn-out{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;padding:.5rem 1.1rem;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;}
-.dash-btn-out:hover{background:#f1f5f9;color:#0f172a;}
-
-.dash-main{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:2rem 5% 4rem;display:flex;flex-direction:column;gap:2.5rem;}
-
-.dash-hero{display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:center;background:linear-gradient(to right,#eff6ff,#fff);border-radius:2rem;padding:2.2rem 3rem;position:relative;overflow:hidden;}
-.dash-greeting{font-size:2.2rem;font-weight:900;color:#0f172a;line-height:1.1;margin-bottom:0.8rem;}
-.dash-greeting-line{width:50px;height:4px;background:#3b82f6;border-radius:2px;margin-bottom:1.2rem;}
-.dash-sub{font-size:.9rem;color:#64748b;line-height:1.6;max-width:380px;}
-.dash-hero-img{position:relative;display:flex;justify-content:center;}
-.dash-hero-img img{width:100%;max-width:280px;z-index:2;filter:drop-shadow(0 20px 40px rgba(0,0,0,.1));}
-.dash-floating-icon{position:absolute;background:#fff;width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 24px rgba(0,0,0,.08);z-index:3;animation:float 4s ease-in-out infinite;}
-.fi-1{top:10%;left:-5%;color:#3b82f6;animation-delay:0s;}
-.fi-2{bottom:15%;right:-5%;color:#f59e0b;animation-delay:1s;}
-
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;}
-.dash-p-card{background:#fff;border-radius:2rem;padding:1.2rem;display:flex;flex-direction:column;gap:1.2rem;border:1px solid #f1f5f9;transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);cursor:pointer;}
-.dash-p-card:hover{transform:translateY(-8px);box-shadow:0 20px 40px rgba(0,0,0,.05);border-color:#e2e8f0;}
-.dash-p-visual{height:160px;border-radius:1.5rem;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.dash-p-visual img{height:85%;object-fit:contain;transition:transform .5s;}
-.dash-p-card:hover .dash-p-visual img{transform:scale(1.1) translateY(-5px);}
-.dash-p-content{padding:0 .5rem;}
-.dash-p-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
-.dash-p-title{font-size:1.4rem;font-weight:800;color:#0f172a;}
-.dash-p-desc{font-size:.9rem;color:#64748b;line-height:1.6;margin-bottom:1.8rem;min-height:3em;}
-.dash-p-btn{display:inline-flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:800;font-size:.9rem;padding:.8rem 1.8rem;border-radius:12px;transition:opacity .2s;box-shadow:0 8px 20px rgba(0,0,0,.1);}
-.dash-p-btn:hover{opacity:.9;}
-
-.dash-help{background:#ecfdf5;border-radius:2rem;padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center;overflow:hidden;position:relative;border:1px solid #d1fae5;}
-.dash-help-left{display:flex;align-items:center;gap:1.5rem;}
-.dash-wa-icon{width:64px;height:64px;background:#10b981;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 24px rgba(16,185,129,.3);}
-.dash-help-title{font-size:1.3rem;font-weight:900;color:#064e3b;margin-bottom:1px;}
-.dash-help-sub{font-size:.85rem;color:#059669;font-weight:600;}
-.dash-wa-num{font-size:1.5rem;font-weight:900;color:#10b981;margin-top:2px;}
-
-@media(max-width:1000px){
-  .dash-hero{grid-template-columns:1fr;padding:2rem;}
-  .dash-hero-img{display:none;}
-  .dash-greeting{font-size:2rem;}
-  .dash-help{flex-direction:column;text-align:center;gap:2rem;padding:2rem;}
-  .dash-help-left{flex-direction:column;gap:1rem;}
-  .dash-help-right{display:none;}
-}
-
-/* PRINT */
-@media print{
-  .noprint{display:none!important;}
-  body{background:#fff!important;overflow:auto!important;}
-  .sf,.nav{display:none!important;}
-  .kpage{padding:0!important;justify-content:flex-start!important;height:auto!important;min-height:auto!important;}
-  .ktopbar,.infobox,.flip-btns{display:none!important;}
-  .flip-scene{max-width:100%!important;}
-  .flip-card{transform:none!important;aspect-ratio:1.586/1!important;position:relative!important;}
-  .face-back{display:none!important;}
-  .face{position:relative!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-}
+  /* Dev Progress */
+  .summary-card { background: var(--card-bg); border-radius: 24px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 60px; transition: background-color 0.3s ease;}
+  .sum-bars { display: flex; gap: 40px; margin-top: 24px;}
+  .sum-col { flex: 1; }
+  .sum-head { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 700; font-size: 0.9rem;}
+  .sum-head span:first-child { color: var(--text-dark); }
+  
+  .footer { border-top: 1px solid var(--border); padding: 32px 0; display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.85rem;}
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { color: var(--text-muted); text-decoration: none; }
 </style>
 </head>
 <body>
 
-<div id="root"></div>
-
-<form action="{{ route('logout') }}" method="POST" id="logout-form-member" style="display:none">
-  @csrf
-</form>
-
 <script>
-  window.CURRENT_MEMBER = {!! json_encode($memberData) !!};
-  window.ROUTES = {
-    memberDashboard: "{{ route('member.dashboard') }}",
-    login: "{{ route('login') }}"
-  };
+  // Apply theme early to prevent flash
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
 </script>
 
-<script type="text/babel">
-@verbatim
-const {useState,useEffect,useRef,useMemo,useCallback}=React;
+<header class="header">
+  <div class="logo">
+    <img src="/asset/img/logo guruverse FA.ai.png" alt="Guruverse">
+    <div class="logo-text">
+      <h1>Guruverse</h1>
+      <p>Belajar • Mengajar • Menginspirasi</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="notif-btn" onclick="toggleTheme()" title="Mode Gelap/Terang">
+      <i id="theme-icon" data-lucide="moon"></i>
+    </button>
+    <button class="notif-btn" onclick="toggleNotif()" style="position:relative;">
+      <i data-lucide="bell"></i>
+      @if($unread_notif_count > 0)
+        <span class="notif-badge">{{ $unread_notif_count }}</span>
+      @endif
+    </button>
+    <div class="user-profile" onclick="toggleUserMenu()" style="position:relative;">
+      <img src="{{ $photo }}" alt="{{ $firstName }}">
+      <div class="user-info">
+        <h4>{{ $firstName }}</h4>
+        <p>Panel Member</p>
+      </div>
+      <i data-lucide="chevron-down" style="color:var(--text-muted); width:16px;"></i>
+    </div>
+  </div>
+</header>
 
-/* ── ICON ── */
-const Ico=({n,s=16,cls=''})=>{
-  const r=useRef(null);
-  useEffect(()=>{
-    if(!r.current||!window.lucide)return;
-    r.current.innerHTML='';
-    const svg=lucide.createElement(lucide[n]||lucide.HelpCircle);
-    svg.setAttribute('width',s);svg.setAttribute('height',s);svg.setAttribute('stroke-width','2');
-    r.current.appendChild(svg);
-  },[n,s]);
-  return <span ref={r} className={`inline-flex items-center justify-center ${cls}`}/>;
-};
-
-/* ── BARCODE ── */
-const Bar=({val=''})=>(
-  <svg viewBox={`0 0 ${val.length*6} 36`} style={{height:22,display:'block'}}>
-    {val.split('').map((c,i)=>(
-      <rect key={i} x={i*6} y="0" width={(c.charCodeAt(0)%3)+1.3} height="36" fill="white" opacity=".72"/>
-    ))}
-  </svg>
-);
-
-/* ── KARTU ── */
-const Kartu=({m,onBack})=>{
-  const [flipped,setFlipped]=useState(false);
-  const fmt=ts=>new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
-
-  const CardFront=()=>(
-    <div className="face cshell">
-      <img src="https://images.unsplash.com/photo-1614850715649-1d0106293bd1?q=80&w=2070&auto=format&fit=crop"
-        style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:.35}} alt=""/>
-      <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(15,12,41,.93) 0%,rgba(109,40,217,.38) 60%,rgba(15,12,41,.28) 100%)'}}/>
-      <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,background:'rgba(167,139,250,.18)',borderRadius:'50%',filter:'blur(55px)'}}/>
-      <div style={{position:'absolute',bottom:-30,left:-20,width:110,height:110,background:'rgba(56,189,248,.13)',borderRadius:'50%',filter:'blur(45px)'}}/>
-      <div className="cin">
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-          <div style={{display:'flex',alignItems:'center',gap:9}}>
-            <div style={{width:32,height:32,background:'rgba(255,255,255,.14)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',border:'1px solid rgba(255,255,255,.18)'}}>
-              <Ico n="Globe" s={15} cls="text-white"/>
-            </div>
-            <div>
-              <p style={{fontWeight:900,fontSize:'.9rem',color:'#fff',letterSpacing:'-.01em',lineHeight:1}}>GURUVERSE.ID</p>
-              <p style={{fontSize:'5.5px',textTransform:'uppercase',letterSpacing:'.32em',color:'rgba(255,255,255,.52)',fontWeight:700}}>EKOSISTEM DIGITAL GURU</p>
-            </div>
-          </div>
-          <div style={{background:'rgba(167,139,250,.18)',border:'1px solid rgba(167,139,250,.28)',borderRadius:'.45rem',padding:'2px 9px'}}>
-            <p style={{fontSize:'6.5px',fontWeight:700,color:'var(--accent)',textTransform:'uppercase',letterSpacing:'.12em'}}>Verified</p>
-          </div>
+<!-- Notification Dropdown -->
+<div class="notif-dropdown" id="notifDropdown" style="display:none;position:absolute;top:72px;right:80px;z-index:9999;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;width:320px;box-shadow:0 10px 40px rgba(0,0,0,0.18);">
+  <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="font-size:14px; font-weight:700;">Notifikasi</h3>
+  </div>
+  <div style="max-height: 350px; overflow-y: auto;">
+    @if ($notifications->isEmpty())
+      <div style="padding: 40px 20px; text-align: center; color: var(--text-muted);">Belum ada notifikasi baru.</div>
+    @else
+      @foreach ($notifications as $n)
+        <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; gap:12px; cursor:pointer;">
+           <div style="width:32px; height:32px; border-radius:8px; background:rgba(99,102,241,0.1); color:var(--primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">🔔</div>
+           <div style="flex:1;">
+             <h4 style="font-size:12px; font-weight:700; margin-bottom:2px;">{{ $n->title }}</h4>
+             <p style="font-size:11px; color:var(--text-muted); line-height:1.4;">{{ $n->message }}</p>
+             <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">{{ date('d M, H:i', strtotime($n->created_at)) }}</div>
+           </div>
+           @if (!$n->is_read)
+             <div style="width:8px; height:8px; border-radius:50%; background:var(--primary); margin-top:4px;"></div>
+           @endif
         </div>
-        <div style={{marginTop:'auto',marginBottom:'.85rem',display:'flex',alignItems:'center',gap:12}}>
-          <div style={{width:58,height:58,borderRadius:13,overflow:'hidden',border:'1.5px solid rgba(167,139,250,.4)',boxShadow:'0 0 18px rgba(109,40,217,.4)',flexShrink:0,background:'rgba(26,21,96,.6)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-            {m.photo?<img src={m.photo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="f"/>:<Ico n="User" s={22} cls="text-white opacity-30"/>}
-          </div>
-          <div style={{overflow:'hidden'}}>
-            <p style={{fontSize:'6px',textTransform:'uppercase',letterSpacing:'.2em',color:'rgba(255,255,255,.52)',fontWeight:700,marginBottom:3}}>ANGGOTA RESMI</p>
-            <h2 style={{fontSize:'1.05rem',fontWeight:900,textTransform:'uppercase',color:'#fff',lineHeight:1.1,wordBreak:'break-word'}}>{m.fullName||'—'}</h2>
-            <p style={{fontSize:'8px',color:'rgba(255,255,255,.62)',fontWeight:600,textTransform:'uppercase',fontStyle:'italic',marginTop:2,wordBreak:'break-word'}}>{m.institution||'—'}</p>
-          </div>
-        </div>
-        <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',borderTop:'1px solid rgba(255,255,255,.1)',paddingTop:9}}>
+      @endforeach
+    @endif
+  </div>
+  <div style="padding:10px; text-align:center; border-top:1px solid var(--border); font-size:12px; font-weight:600; color:var(--primary); cursor:pointer;">
+    Lihat Semua
+  </div>
+</div>
+
+<!-- User Dropdown Menu -->
+<div id="userDropdown" style="
+  display:none;position:absolute;top:72px;right:24px;z-index:9999;
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:14px;padding:6px;min-width:200px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.18);
+">
+  <div style="padding:10px 12px;border-bottom:1px solid var(--border);margin-bottom:4px">
+    <div style="font-weight:700;font-size:13px;">{{ $member->full_name }}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:2px">{{ $member->institution ?? 'Member' }}</div>
+  </div>
+  <a href="{{ route('member.profil_portal') }}"
+     style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dark);text-decoration:none;">
+     <i data-lucide="user" style="width:16px;"></i> Profil Saya
+  </a>
+  <div style="height:1px;background:var(--border);margin:4px 0"></div>
+  <form action="{{ route('logout') }}" method="POST" id="logout-form-portal" style="display:none;">
+    @csrf
+  </form>
+  <a onclick="event.preventDefault(); document.getElementById('logout-form-portal').submit();"
+     style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#ef4444;text-decoration:none;">
+     <i data-lucide="log-out" style="width:16px;"></i> Keluar
+  </a>
+</div>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="circle-dec" style="width:300px; height:300px; left:-50px; top:-100px;"></div>
+    <div class="circle-dec" style="width:150px; height:150px; right:350px; top:40px;"></div>
+    <div class="circle-dec" style="width:80px; height:80px; right:400px; bottom:60px;"></div>
+    
+    <div class="hero-content">
+      <div class="hero-pill">Ruang tumbuh untuk pendidik hebat</div>
+      <h2>Halo, {{ $firstName }}! </h2>
+      <p>Selamat datang di Panel Member GuruVerse. Pilih portal yang ingin Anda<br>akses untuk memulai perjalanan pendidikan Anda.</p>
+
+    </div>
+    
+
+    
+    <!-- 3D Character Image -->
+    <div class="hero-character">
+      <img src="/asset/img/3d_avatar_blender.png" alt="Avatar">
+    </div>
+  </div>
+
+
+
+  <!-- Portals -->
+  <div class="section-header">
+    <div class="section-title">
+      <h3>Portal Utama</h3>
+      <h2>Pilih Portal yang Ingin Anda Akses</h2>
+    </div>
+  </div>
+
+  <div class="portal-grid">
+    <a href="/dashboard" class="portal-card p-belajar">
+      <img src="/asset/img/pilar_belajar_3d.png" class="portal-img">
+      <div class="portal-body">
+        <div class="portal-head">
+          <div class="portal-icon">📘</div>
           <div>
-            <p style={{fontSize:'5.5px',textTransform:'uppercase',letterSpacing:'.2em',color:'rgba(255,255,255,.42)',fontWeight:700}}>ID ANGGOTA</p>
-            <p className="mono" style={{fontSize:'.88rem',fontWeight:700,color:'#fff',marginTop:2,letterSpacing:'.05em'}}>{m.memberId||'—'}</p>
+            <div class="portal-title">Guru Belajar</div>
+            <div class="portal-meta">6 Kelas Aktif</div>
           </div>
-          <Bar val={m.memberId||'GV0000'}/>
         </div>
+        <div class="portal-desc">Platform peningkatan kompetensi pendidik melalui pelatihan dan kelas terstruktur.</div>
+        <div class="portal-btn">Mulai Belajar</div>
       </div>
-    </div>
-  );
-
-  const CardBack=()=>(
-    <div className="face face-back cshell" style={{background:'linear-gradient(140deg,#1a0f3e 0%,#2a1865 35%,#3d2080 60%,#6030a0 100%)'}}>
-      <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,transparent 30%,rgba(200,80,180,.22) 45%,rgba(170,60,160,.18) 55%,transparent 68%)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',top:0,right:0,width:'50%',height:'55%',backgroundImage:'radial-gradient(circle,rgba(255,255,255,.1) 1.2px,transparent 1.2px)',backgroundSize:'13px 13px'}}/>
-      <div style={{position:'absolute',bottom:'-15%',left:'-10%',width:'45%',height:'65%',background:'radial-gradient(ellipse,rgba(109,40,217,.3) 0%,transparent 65%)'}}/>
-      <div style={{position:'relative',zIndex:10,height:'100%',display:'flex',flexDirection:'column',padding:'1rem 1.3rem',gap:0}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+    </a>
+    
+    <a href="/member/mengajar" class="portal-card p-mengajar">
+      <img src="/asset/img/pilar_mengajar_3d.png" class="portal-img">
+      <div class="portal-body">
+        <div class="portal-head">
+          <div class="portal-icon">🏫</div>
           <div>
-            <p style={{fontWeight:900,fontSize:'.8rem',color:'#fff',letterSpacing:'-.01em',lineHeight:1}}>GURUVERSE<span style={{color:'#fbbf24'}}>.ID</span></p>
-            <p style={{fontSize:'4.5px',textTransform:'uppercase',letterSpacing:'.3em',color:'rgba(255,255,255,.4)',fontWeight:700,marginTop:1}}>Member Card</p>
-          </div>
-          <div style={{background:'rgba(74,222,128,.1)',border:'1px solid rgba(74,222,128,.25)',borderRadius:20,padding:'2px 8px',display:'flex',alignItems:'center',gap:4}}>
-            <span className="bl" style={{width:4,height:4,borderRadius:'50%',background:'#4ade80',display:'inline-block'}}/>
-            <span style={{fontSize:'5.5px',fontWeight:800,color:'#4ade80',letterSpacing:'.12em',textTransform:'uppercase'}}>Aktif</span>
+            <div class="portal-title">Guru Mengajar</div>
+            <div class="portal-meta">24 Materi Tersedia</div>
           </div>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1px 1fr',gap:'0 10px',flex:1,overflow:'hidden'}}>
-          <div style={{display:'flex',flexDirection:'column',gap:5}}>
-            {[
-              {l:'Nama Lengkap',v:m.fullName||'—'},
-              {l:'ID Anggota',v:m.memberId||'—',mono:true},
-              {l:'Instansi',v:m.institution||'—'},
-              {l:'Email',v:m.email||'—'},
-              {l:'No. WhatsApp',v:m.phone||'—'},
-              {l:'Bergabung',v:fmt(m.joinedAt)},
-            ].map((row,i)=>(
-              <div key={i} style={{display:'flex',flexDirection:'column',gap:1}}>
-                <span style={{fontSize:'4.5px',textTransform:'uppercase',letterSpacing:'.18em',color:'rgba(255,255,255,.38)',fontWeight:700}}>{row.l}</span>
-                <span style={{fontFamily:row.mono?'JetBrains Mono,monospace':undefined,fontSize:row.mono?'.58rem':'.62rem',fontWeight:700,color:'#fff',lineHeight:1.2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{row.v}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{background:'rgba(255,255,255,.12)',borderRadius:2}}/>
-          <div style={{display:'flex',flexDirection:'column',gap:6,paddingLeft:2}}>
-            <div style={{display:'flex',flexDirection:'column',gap:8,height:'100%',justifyContent:'center'}}>
-              <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:2}}>
-                <div style={{width:3,height:12,background:'#38bdf8',borderRadius:2}}/>
-                <span style={{fontSize:'5.5px',fontWeight:800,textTransform:'uppercase',letterSpacing:'.18em',color:'#38bdf8'}}>3 Pilar Guruverse</span>
-              </div>
-              <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                {[
-                  { t: 'Guru Belajar', d: 'Platform peningkatan kompetensi pendidik melalui pelatihan dan kelas terstruktur.' },
-                  { t: 'Guru Mengajar', d: 'Wadah berbagi praktik baik, perangkat ajar, dan metode inovatif.' },
-                  { t: 'Guru Inspira', d: 'Ruang publikasi karya, tulisan, dan pengalaman inspiratif.' }
-                ].map((p,i)=>(
-                  <div key={i} style={{display:'flex',flexDirection:'column',gap:1.5}}>
-                    <div style={{display:'flex',gap:4,alignItems:'center'}}>
-                      <span style={{width:4,height:4,borderRadius:'50%',background:'rgba(56,189,248,.8)'}}/>
-                      <span style={{fontSize:'.58rem',fontWeight:800,color:'#fff'}}>{p.t}</span>
-                    </div>
-                    <span style={{fontSize:'.5rem',fontWeight:500,color:'rgba(255,255,255,.7)',lineHeight:1.35,paddingLeft:8}}>{p.d}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div class="portal-desc">Wadah berbagi praktik baik, perangkat ajar, dan metode inovatif bagi murid.</div>
+        <div class="portal-btn">Mulai Mengajar</div>
+      </div>
+    </a>
+    
+    <a href="/member/inspira" class="portal-card p-inspira">
+      <img src="/asset/img/pilar_inspira_3d.png" class="portal-img">
+      <div class="portal-body">
+        <div class="portal-head">
+          <div class="portal-icon">✨</div>
+          <div>
+            <div class="portal-title">Guru Inspira</div>
+            <div class="portal-meta">158 Artikel Terbit</div>
           </div>
         </div>
-        <div style={{borderTop:'1px solid rgba(255,255,255,.1)',paddingTop:6,marginTop:6}}>
-          <Bar val={m.memberId||'GV0000'}/>
-          <div style={{display:'flex',justifyContent:'space-between',marginTop:2}}>
-            <p className="mono" style={{fontSize:'4.5px',color:'rgba(255,255,255,.3)',fontWeight:700,letterSpacing:'.04em'}}>{m.memberId||'—'}</p>
-            <p style={{fontSize:'4.5px',color:'rgba(255,255,255,.25)',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase'}}>Guruverse.id © {new Date().getFullYear()}</p>
-          </div>
+        <div class="portal-desc">Ruang publikasi karya, tulisan, dan pengalaman inspiratif bersama rekan sejawat.</div>
+        <div class="portal-btn">Mulai Menginspirasi</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Bottom 2 Cols -->
+  <div class="bottom-grid">
+    <!-- Aktivitas -->
+    <div class="list-card">
+      <div class="section-header" style="margin-bottom:32px;">
+        <div class="section-title">
+          <h3>Jejak Terbaru</h3>
+          <h2>Aktivitas Terakhir</h2>
+        </div>
+        <div class="stat-menu" style="position:static;"><i data-lucide="more-horizontal"></i></div>
+      </div>
+      
+      <div class="list-item">
+        <div class="item-icon" style="background:#eff6ff; color:#3b82f6;"><i data-lucide="book-open"></i></div>
+        <div class="item-content">
+          <div class="item-title">Menyelesaikan Modul "Manajemen Kelas Digital"</div>
+          <div class="item-time">2 jam lalu</div>
+        </div>
+      </div>
+      
+      <div class="list-item">
+        <div class="item-icon" style="background:#f0fdf4; color:#10b981;"><i data-lucide="folder-up"></i></div>
+        <div class="item-content">
+          <div class="item-title">Mengunggah Perangkat Ajar</div>
+          <div class="item-time">Kemarin</div>
+        </div>
+      </div>
+      
+      <div class="list-item">
+        <div class="item-icon" style="background:#faf5ff; color:#a855f7;"><i data-lucide="sparkles"></i></div>
+        <div class="item-content">
+          <div class="item-title">Menerbitkan Artikel Inspiratif</div>
+          <div class="item-time">3 hari lalu</div>
         </div>
       </div>
     </div>
-  );
-
-  return(
-    <div className="kpage">
-      <div className="ktopbar noprint">
-        <button onClick={onBack} style={{display:'flex',alignItems:'center',gap:5,fontWeight:700,fontSize:'.72rem',textTransform:'uppercase',letterSpacing:'.1em',color:'rgba(255,255,255,.5)',background:'none',border:'none',cursor:'pointer',transition:'color .2s'}}
-          onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.5)'}>
-          <Ico n="ArrowLeft" s={13}/> Kembali
-        </button>
-        <span style={{fontWeight:700,fontSize:'.65rem',textTransform:'uppercase',letterSpacing:'.15em',color:'rgba(255,255,255,.35)',fontStyle:'italic'}}>Official Identity Card</span>
-        <div style={{width:72}}/>
+    
+    <!-- Rekomendasi -->
+    <div class="list-card">
+      <div class="section-header" style="margin-bottom:32px;">
+        <div class="section-title">
+          <h3>Untuk Anda</h3>
+          <h2>Rekomendasi Untuk Anda</h2>
+        </div>
+        <div class="stat-menu" style="position:static; width:36px; height:36px; border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center;"><i data-lucide="sliders-horizontal" style="width:16px;"></i></div>
       </div>
-      <div className="flip-scene" onClick={()=>setFlipped(f=>!f)} style={{cursor:'pointer'}} title="Klik untuk membalik">
-        <div className={`flip-card${flipped?' flipped':''}`}>
-          <CardFront/>
-          <CardBack/>
-        </div>
-      </div>
-      <div className="infobox noprint">
-        <div style={{borderRight:'1px solid rgba(255,255,255,.07)',paddingRight:'.75rem'}}>
-          <p style={{color:'rgba(255,255,255,.35)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',marginBottom:4,fontSize:'.58rem'}}>Tgl Penerbitan</p>
-          <p style={{fontWeight:800,color:'#fff',fontSize:'.72rem'}}>{fmt(m.joinedAt)}</p>
-        </div>
-        <div style={{textAlign:'right'}}>
-          <p style={{color:'rgba(255,255,255,.35)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',marginBottom:4,fontSize:'.58rem'}}>Status</p>
-          <p style={{fontWeight:800,color:'#4ade80',display:'flex',alignItems:'center',justifyContent:'flex-end',gap:5,fontSize:'.72rem'}}>
-            <span className="bl" style={{width:6,height:6,background:'#4ade80',borderRadius:'50%',display:'inline-block'}}/>Aktif
-          </p>
-        </div>
-      </div>
-      <div className="flip-btns noprint" style={{display:'flex',gap:'.6rem',width:'100%',maxWidth:460}}>
-        <button onClick={()=>setFlipped(f=>!f)}
-          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.1)',borderRadius:10,padding:'.55rem',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:'.72rem',color:'rgba(255,255,255,.55)',transition:'all .15s'}}
-          onMouseOver={e=>{e.currentTarget.style.background='rgba(167,139,250,.12)';e.currentTarget.style.color='#fff';}}
-          onMouseOut={e=>{e.currentTarget.style.background='rgba(255,255,255,.06)';e.currentTarget.style.color='rgba(255,255,255,.55)';}}>
-          <Ico n="RefreshCw" s={13}/>{flipped?'Lihat Depan':'Lihat Belakang'}
-        </button>
-        <button onClick={()=>window.print()}
-          style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,background:'linear-gradient(135deg,#7c3aed,#6d28d9)',border:'none',borderRadius:10,padding:'.55rem',cursor:'pointer',fontFamily:'inherit',fontWeight:800,fontSize:'.72rem',color:'#fff',boxShadow:'0 4px 14px rgba(124,58,237,.4)',transition:'opacity .15s'}}
-          onMouseOver={e=>e.currentTarget.style.opacity='.85'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>
-          <Ico n="Download" s={13}/> Simpan Kartu (PDF)
-        </button>
-      </div>
-    </div>
-  );
-};
-
-/* ── MEMBER MENU ── */
-const MemberMenu = ({ member, onCard, onOut }) => {
-  const pillars = [
-    { t: 'Guru Belajar', s: '"Guru yang terus tumbuh dan memperdalam ilmunya."', c: '#3b82f6', ic: 'BookOpen', href: window.ROUTES.memberDashboard, img: '/asset/img/pilar_learning.png', bg: '#eff6ff' },
-    { t: 'Guru Mengajar', s: "Guru yang mengimplementasikan nilai dan berdampak bagi murid serta komunitas.", c: '#10b981', ic: 'Users', href: '/member/mengajar', img: '/asset/img/pilar_teaching.png', bg: '#ecfdf5' },
-    { t: 'Guru Inspira', s: "Guru yang saling menguatkan dan berbagi semangat.", c: '#8b5cf6', ic: 'Zap', href: '/member/inspira', img: '/asset/img/pilar_innovation.png', bg: '#f5f3ff' },
-  ];
-
-  return (
-    <div className="dash-container">
-      {/* Header */}
-      <header className="dash-header">
-        <div className="dash-logo">
-          <img src="/asset/img/FA Logo Guruverse.ID - main.png" className="brand-logo-light" alt="GV" style={{ height: 32, display: 'block' }} />
-          <img src="/asset/img/FA Logo Guruverse.ID - nrgative.png" className="brand-logo-dark" alt="GV" style={{ height: 32, display: 'none' }} />
-          <span>Panel Member</span>
-        </div>
-        <div className="dash-actions">
-          <button className="dash-btn-card" onClick={onCard}>
-            <Ico n="IdCard" s={16} /> Kartu Saya
-          </button>
-          <button className="dash-btn-out" onClick={onOut}>
-            <Ico n="LogOut" s={16} /> Keluar
-          </button>
-        </div>
-      </header>
-
-      <main className="dash-main">
-        {/* Hero Section */}
-        <section className="dash-hero">
-          <div className="dash-hero-text">
-            <h1 className="dash-greeting">Halo, {(member.fullName || 'Anggota').split(' ')[0]}!</h1>
-            <div className="dash-greeting-line" />
-            <p className="dash-sub">Selamat datang di Panel Member. Pilih portal yang ingin Anda akses sesuai kebutuhan Anda.</p>
+      
+      <div class="list-item">
+        <div class="item-icon" style="overflow:hidden;"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=200&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;"></div>
+        <div class="item-content">
+          <div class="item-title">Manajemen Kelas Digital</div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:50%; background:#3b82f6;"></div></div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-top:12px;">50%</div>
           </div>
-          <div className="dash-hero-img">
-            <img src="/asset/img/hero_illustration_new.png" alt="Hero" />
-            <div className="dash-floating-icon fi-1"><Ico n="GraduationCap" s={24} /></div>
-            <div className="dash-floating-icon fi-2"><Ico n="Award" s={20} /></div>
-          </div>
-        </section>
-
-        {/* Pillars Grid */}
-        <section className="dash-grid">
-          {pillars.map((p, i) => (
-            <div key={i} className="dash-p-card" onClick={() => window.location.href = p.href}>
-              <div className="dash-p-visual" style={{ background: p.bg }}>
-                <img src={p.img} alt={p.t} />
-              </div>
-              <div className="dash-p-content">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div className="dash-p-icon" style={{ color: p.c, background: `${p.c}15` }}>
-                    <Ico n={p.ic} s={22} />
-                  </div>
-                  <h3 className="dash-p-title">{p.t}</h3>
-                </div>
-                <p className="dash-p-desc">{p.s}</p>
-                <a href={p.href} className="dash-p-btn" style={{ background: p.c }} onClick={e => e.stopPropagation()}>
-                  Masuk Portal <Ico n="ArrowRight" s={16} />
-                </a>
-              </div>
-            </div>
-          ))}
-        </section>
-
-        {/* Help Banner */}
-        <section className="dash-help">
-          <div className="dash-help-left">
-            <div className="dash-wa-icon">
-              <Ico n="MessageCircle" s={32} />
-            </div>
-            <div>
-              <h4 className="dash-help-title">Butuh bantuan?</h4>
-              <p className="dash-help-sub">Hubungi WhatsApp Support kami di</p>
-              <p className="dash-wa-num">0831-3353-1303</p>
-            </div>
-          </div>
-          <div className="dash-help-right">
-            <img src="/asset/img/help_phone.png" alt="Phone" style={{ width: 140, transform: 'rotate(10deg) translateY(20px)' }} />
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-};
-
-/* ── LOGOUT MODAL ── */
-const LogoutModal=({onConfirm,onCancel})=>(
-  <div style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(0,0,0,.55)',backdropFilter:'blur(6px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
-    <div style={{background:'#fff',borderRadius:20,padding:'2rem',width:'100%',maxWidth:340,boxShadow:'0 24px 60px rgba(0,0,0,.2)',animation:'fadeUp .3s cubic-bezier(.22,1,.36,1) both',textAlign:'center'}}>
-      <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(239,68,68,.1)',color:'#ef4444',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 1rem'}}>
-        <Ico n="LogOut" s={26}/>
+        </div>
+        <div class="item-action">
+          <button class="btn-sm btn-blue">Lanjutkan</button>
+        </div>
       </div>
-      <h3 style={{fontSize:'1.15rem',fontWeight:900,color:'#0f172a',marginBottom:8}}>Keluar dari Akun?</h3>
-      <p style={{fontSize:'.85rem',color:'#64748b',lineHeight:1.55,marginBottom:'1.5rem'}}>Anda harus login kembali untuk mengakses Panel Member Guruverse.</p>
-      <div style={{display:'flex',gap:12}}>
-        <button onClick={onCancel} style={{flex:1,padding:'.75rem',borderRadius:12,background:'#f1f5f9',color:'#475569',fontWeight:700,fontSize:'.9rem',border:'none',cursor:'pointer',transition:'background .2s'}}
-          onMouseOver={e=>e.currentTarget.style.background='#e2e8f0'} onMouseOut={e=>e.currentTarget.style.background='#f1f5f9'}>
-          Batal
-        </button>
-        <button onClick={onConfirm} style={{flex:1,padding:'.75rem',borderRadius:12,background:'#ef4444',color:'#fff',fontWeight:700,fontSize:'.9rem',border:'none',cursor:'pointer',boxShadow:'0 4px 14px rgba(239,68,68,.35)',transition:'opacity .2s'}}
-          onMouseOver={e=>e.currentTarget.style.opacity='.85'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>
-          Ya, Keluar
-        </button>
+      
+      <div class="list-item">
+        <div class="item-icon" style="overflow:hidden;"><img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=200&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;"></div>
+        <div class="item-content">
+          <div class="item-title">Webinar AI dalam Pembelajaran</div>
+          <div class="item-time" style="margin-top:6px;">20 Juli 2026</div>
+        </div>
+        <div class="item-action">
+          <button class="btn-sm btn-purple">Daftar</button>
+        </div>
       </div>
     </div>
   </div>
-);
 
-/* ── APP ── */
-const App=()=>{
-  const [view,setView]=useState('menu');
-  const [mem,setMem]=useState(window.CURRENT_MEMBER);
-  const [showLogout,setShowLogout]=useState(false);
-
-  const onCard=()=>setView('card');
-  const onOut=()=>setShowLogout(true);
-  const doLogout=()=>{
-    document.getElementById('logout-form-member').submit();
-  };
-
-  useEffect(() => {
-    // Sync dark mode setting
-    var saved = localStorage.getItem('guruverse_theme');
-    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var theme = saved || (prefersDark ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-  }, []);
-
-  if(!mem) return(
-    <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',color:'rgba(255,255,255,.6)',flexDirection:'column',gap:12}}>
-      <Ico n="AlertCircle" s={32}/>
-      <p>Sesi tidak ditemukan. <a href={window.ROUTES.login} style={{color:'var(--accent)'}}>Login kembali</a></p>
+  <!-- Progress -->
+  <div class="summary-card">
+    <div class="section-header" style="margin-bottom:0;">
+      <div class="section-title">
+        <h3>Ringkasan Perjalanan</h3>
+        <h2>Progress Pengembangan Anda</h2>
+      </div>
+      <div class="item-time">Terus melangkah, dampak Anda semakin terasa.</div>
     </div>
-  );
+    
+    <div class="sum-bars">
+      <div class="sum-col">
+        <div class="sum-head"><span>Guru Belajar</span> <span style="color:#3b82f6;">60%</span></div>
+        <div class="progress-bar" style="height:8px;"><div class="progress-fill" style="width:60%; background:#3b82f6;"></div></div>
+      </div>
+      <div class="sum-col">
+        <div class="sum-head"><span>Guru Mengajar</span> <span style="color:#10b981;">40%</span></div>
+        <div class="progress-bar" style="height:8px;"><div class="progress-fill" style="width:40%; background:#10b981;"></div></div>
+      </div>
+      <div class="sum-col">
+        <div class="sum-head"><span>Guru Inspira</span> <span style="color:#a855f7;">75%</span></div>
+        <div class="progress-bar" style="height:8px;"><div class="progress-fill" style="width:75%; background:#a855f7;"></div></div>
+      </div>
+    </div>
+  </div>
 
-  return(
-    <>
-      {view==='menu'&&<MemberMenu member={mem} onCard={onCard} onOut={onOut}/>}
-      {view==='card'&&<Kartu m={mem} onBack={()=>setView('menu')}/>}
-      {showLogout&&<LogoutModal onConfirm={doLogout} onCancel={()=>setShowLogout(false)}/>}
-    </>
-  );
-};
+  <!-- Footer -->
+  <footer class="footer">
+    <div>&copy; 2026 GuruVerse<br><span style="font-size:0.7rem;">Belajar • Mengajar • Menginspirasi</span></div>
+    <div class="footer-links">
+      <a href="#">Tentang Kami</a>
+      <a href="#">Bantuan</a>
+      <a href="#">Kebijakan Privasi</a>
+      <a href="#">Kontak</a>
+    </div>
+  </footer>
 
-@endverbatim
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</div>
+
+<script>
+  lucide.createIcons();
+
+  function updateToggleIcon(theme) {
+    const icon = document.getElementById('theme-icon');
+    if(icon) {
+      icon.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons({
+        nameAttr: 'data-lucide'
+      });
+    }
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateToggleIcon(newTheme);
+  }
+
+  // Set initial icon
+  updateToggleIcon(currentTheme);
+
+  function toggleNotif() {
+    const nd = document.getElementById('notifDropdown');
+    const ud = document.getElementById('userDropdown');
+    if(nd.style.display === 'none') {
+      nd.style.display = 'block';
+      ud.style.display = 'none';
+    } else {
+      nd.style.display = 'none';
+    }
+  }
+
+  function toggleUserMenu() {
+    const nd = document.getElementById('notifDropdown');
+    const ud = document.getElementById('userDropdown');
+    if(ud.style.display === 'none') {
+      ud.style.display = 'block';
+      nd.style.display = 'none';
+    } else {
+      ud.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    const nd = document.getElementById('notifDropdown');
+    const ud = document.getElementById('userDropdown');
+    if (!e.target.closest('.notif-btn') && !e.target.closest('#notifDropdown')) {
+      if(nd) nd.style.display = 'none';
+    }
+    if (!e.target.closest('.user-profile') && !e.target.closest('#userDropdown')) {
+      if(ud) ud.style.display = 'none';
+    }
+  });
 </script>
 </body>
 </html>

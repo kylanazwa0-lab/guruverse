@@ -12,7 +12,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->redirectUsersTo(function () {
+            if (\Illuminate\Support\Facades\Auth::guard('admin')->check()) {
+                return route('admin.dashboard');
+            }
+            return route('member.dashboard');
+        });
+        $middleware->validateCsrfTokens(except: [
+            'admin/module/*',
+        ]);
+
+        // ── Middleware Aliases ────────────────────────────────────────────────
+        $middleware->alias([
+            'session.validate' => \App\Http\Middleware\ValidateSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

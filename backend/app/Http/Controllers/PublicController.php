@@ -20,6 +20,16 @@ class PublicController extends Controller
         return view('public.about');
     }
 
+    public function learnMoreGuruBelajar()
+    {
+        return view('public.learn_more_gurubelajar');
+    }
+
+    public function learnMoreGuruInspira()
+    {
+        return view('public.learn_more_guruinspira');
+    }
+
     public function learnMore()
     {
         $products = \App\Models\Product::limit(4)->get();
@@ -42,14 +52,26 @@ class PublicController extends Controller
         return view('public.program');
     }
 
-    public function testimoni()
-    {
-        return view('public.testimoni');
-    }
+
 
     public function infoGuruInspira()
     {
         return view('public.info_guruinspira');
+    }
+
+    public function guruBelajar()
+    {
+        return view('public.pages.gurubelajar');
+    }
+
+    public function guruMengajar()
+    {
+        return view('public.pages.gurumengajar');
+    }
+
+    public function guruInspira()
+    {
+        return view('public.pages.guruinspira');
     }
 
     public function card(Request $request)

@@ -71,7 +71,7 @@ class MemberCourseController extends Controller
         if ($courseId) {
             $course = Course::find($courseId);
             if ($course) {
-                $modules = $course->modules()->orderBy('order')->get();
+                $modules = $course->modules()->orderBy('module_number')->get();
             }
         }
 
@@ -424,7 +424,6 @@ class MemberCourseController extends Controller
             'score' => $score,
             'answers_json' => $answers_json,
             'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         // Get current progress
@@ -492,7 +491,6 @@ class MemberCourseController extends Controller
                             'pdf_path' => $pdf_path,
                             'issued_at' => now(),
                             'created_at' => now(),
-                            'updated_at' => now(),
                         ]);
                     }
                 }

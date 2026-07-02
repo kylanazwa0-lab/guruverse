@@ -1,0 +1,47 @@
+{
+    "judul": "Kuis Pengetahuan Umum Seru",
+    "tipe_game": "kuis_pilihan_ganda",
+    "deskripsi": "Jawab semua pertanyaan dengan teliti dan pilih jawaban yang paling benar!",
+    "pertanyaan": [
+        {
+            "soal": "Ibu kota Indonesia adalah...",
+            "opsi": [
+                "Bandung",
+                "Jakarta",
+                "Surabaya",
+                "Medan"
+            ],
+            "jawaban_benar": "Jakarta"
+        },
+        {
+            "soal": "Planet terbesar di tata surya adalah...",
+            "opsi": [
+                "Mars",
+                "Venus",
+                "Jupiter",
+                "Saturnus"
+            ],
+            "jawaban_benar": "Jupiter"
+        },
+        {
+            "soal": "Hasil dari 12 \u00d7 8 adalah...",
+            "opsi": [
+                "96",
+                "88",
+                "108",
+                "86"
+            ],
+            "jawaban_benar": "96"
+        },
+        {
+            "soal": "Hewan yang dikenal sebagai raja hutan adalah...",
+            "opsi": [
+                "Harimau",
+                "Singa",
+                "Gajah",
+                "Serigala"
+            ],
+            "jawaban_benar": "Singa"
+        }
+    ]
+}

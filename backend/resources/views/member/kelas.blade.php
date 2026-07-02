@@ -93,13 +93,13 @@
       align-items: center;
       gap: 8px;
       padding: 6px 12px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.5);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(124, 58, 237, 0.2);
       border-radius: 100px;
       font-size: 12px;
-      font-weight: 600;
-      color: #fff;
+      font-weight: 700;
+      color: #1e293b;
     }
     .kelas-stat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
     .empty-state-card {
@@ -169,25 +169,62 @@
       background: var(--c-primary);
       color: #fff;
     }
+
+    /* ── BUGFIX: Grid Layout ── */
+    .kelas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 20px;
+    }
+
+    /* ── UPGRADE: Premium Hero & Card ── */
+    .dash-hero-premium {
+      background: linear-gradient(135deg, rgba(124,58,237,.1) 0%, rgba(6,182,212,.05) 100%);
+      border: 1px solid rgba(124,58,237,.2);
+      border-radius: 20px;
+      padding: 1.5rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .dash-hero-premium::before {
+      content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(124,58,237,.08) 0%, transparent 60%); pointer-events: none;
+    }
+    
+    .card-course-premium {
+      background: var(--c-card); border: 1px solid var(--c-border);
+      border-radius: 16px; padding: 0; overflow: hidden; transition: all 0.3s;
+      display: flex; flex-direction: column; cursor: pointer;
+    }
+    .card-course-premium:hover {
+      transform: translateY(-8px); box-shadow: 0 20px 40px rgba(124,58,237,.1);
+      border-color: rgba(124,58,237,.3);
+    }
+    .ccp-img { height: 130px; background-size: cover; background-position: center; position: relative; }
+    .ccp-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+      color: #fff; font-size: 0.6rem; font-weight: 800; padding: 3px 8px; border-radius: 12px;
+    }
+    .ccp-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
+    .ccp-title { font-size: 0.95rem; font-weight: 800; color: var(--c-text); margin-bottom: 10px; line-height: 1.4; }
   </style>
 
   <!-- ── Hero Section ─────────────────────────── -->
-  <div class="hero-section mb-16" style="padding:14px 24px;min-height:auto">
-    <div class="hero-stars" aria-hidden="true">
-      <span style="top:15%;left:10%;--d:3s;--delay:0s"></span>
-      <span style="top:40%;left:60%;--d:3.5s;--delay:1s"></span>
+  <div class="dash-hero-premium">
+    <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,58,237,.1);padding:3px 10px;border-radius:20px;color:var(--c-primary);font-size:0.65rem;font-weight:800;margin-bottom:10px;">
+      <span style="width:5px;height:5px;border-radius:50%;background:var(--c-primary);"></span> Aktif Belajar
     </div>
-    <div class="hero-text">
-      <div class="hero-badge">
-        <span class="hero-badge-dot" style="background:#10b981"></span> Aktif Belajar
-      </div>
-      <h1 style="font-size:22px">Kelas Saya</h1>
-      <p style="font-size:13px">Kelola dan lanjutkan semua kelas yang sedang kamu pelajari.</p>
-      <div class="kelas-stats-row">
-        <div class="kelas-stat-badge"><span class="kelas-stat-dot" style="background:#60a5fa"></span><span>{{ $total_kelas }} Total</span></div>
-        <div class="kelas-stat-badge"><span class="kelas-stat-dot" style="background:#fbbf24"></span><span>{{ $total_kelas - $kelas_selesai }} Berjalan</span></div>
-        <div class="kelas-stat-badge"><span class="kelas-stat-dot" style="background:#10b981"></span><span>{{ $kelas_selesai }} Selesai</span></div>
-      </div>
+    <h1 style="font-size:1.5rem; font-weight:900; color:var(--text); line-height:1.2; margin-bottom:0.25rem;">
+      <span style="background:linear-gradient(135deg, var(--c-primary), #06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Kelas Saya</span>
+    </h1>
+    <p style="font-size:0.85rem; color:var(--c-text-muted); line-height:1.5; max-width:450px; margin-bottom:1rem;">Kelola dan lanjutkan semua kelas yang sedang kamu pelajari.</p>
+    <div class="kelas-stats-row" style="margin-top:0;">
+      <div class="kelas-stat-badge"><span class="kelas-stat-dot" style="background:#60a5fa"></span><span>{{ $total_kelas }} Total</span></div>
+      <div class="kelas-stat-badge"><span class="kelas-stat-dot" style="background:#fbbf24"></span><span>{{ $total_kelas - $kelas_selesai }} Berjalan</span></div>
+      <div class="kelas-stat-badge"><span class="kelas-stat-dot" style="background:#10b981"></span><span>{{ $kelas_selesai }} Selesai</span></div>
     </div>
   </div>
 
@@ -287,46 +324,42 @@
           // Kelas selesai: sembunyikan dari default view, hanya tampil di tab 'Selesai'
           $card_display = $is_completed ? 'none' : 'flex';
         @endphp
-      <div class="card p-0 overflow-hidden" style="display:{{ $card_display }};flex-direction:column;" data-status="{{ htmlspecialchars($en['status']) }}" data-completed="{{ $is_completed ? '1' : '0' }}" data-progress="{{ $pct }}" data-enrolled="{{ htmlspecialchars($en['enrolled_at']) }}">
-        <div style="height:140px;background:{{ $is_completed ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,var(--c-primary-light),var(--c-primary))' }};position:relative;">
-          <div style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">
-            {{ htmlspecialchars($en['category']) }}
-          </div>
+      <div class="card-course-premium" style="display:{{ $card_display }};" data-status="{{ htmlspecialchars($en['status']) }}" data-completed="{{ $is_completed ? '1' : '0' }}" data-progress="{{ $pct }}" data-enrolled="{{ htmlspecialchars($en['enrolled_at']) }}" onclick="{{ $is_completed && !empty($en['pdf_path']) ? "viewCertificate('".htmlspecialchars($en['pdf_path'])."')" : "openCoursePlayer({$en['course_id']})" }}">
+        <div class="ccp-img" style="background:{{ $is_completed ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,var(--c-primary-light),var(--c-primary))' }};">
+          <div class="ccp-badge">{{ htmlspecialchars($en['category']) }}</div>
           @if ($is_completed)
-          <div style="position:absolute;bottom:12px;left:12px;background:rgba(16,185,129,0.9);backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;">
+          <div style="position:absolute;bottom:10px;left:10px;background:rgba(16,185,129,0.9);backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             Selesai
           </div>
           @endif
         </div>
-        <div style="padding:16px;flex:1;display:flex;flex-direction:column;">
-          <h3 class="kelas-card-title" style="font-size:15px;font-weight:800;margin-bottom:8px;line-height:1.4">{{ htmlspecialchars($en['title']) }}</h3>
-          <div style="font-size:12px;color:var(--c-text-muted);margin-bottom:16px;display:flex;gap:12px;">
-            <span style="display:flex;align-items:center;gap:4px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ $en['duration_hours'] }} Jam</span>
-            <span style="display:flex;align-items:center;gap:4px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> {{ $en['total_modules'] }} Modul</span>
+        <div class="ccp-body">
+          <h3 class="ccp-title">{{ htmlspecialchars($en['title']) }}</h3>
+          <div style="font-size:12px;color:var(--c-text-muted);margin-bottom:16px;display:flex;gap:12px;font-weight:600;">
+            <span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ $en['duration_hours'] }} Jam</span>
+            <span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> {{ $en['total_modules'] }} Modul</span>
           </div>
           <div style="margin-top:auto;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:6px;color:var(--c-text-muted)">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:8px;color:var(--c-text-muted)">
               <span>Progress</span>
               <span style="color:{{ $is_completed ? '#10b981' : 'var(--c-primary)' }}">{{ $pct }}%</span>
             </div>
             <div style="height:6px;background:var(--c-border);border-radius:99px;overflow:hidden;margin-bottom:16px;">
-              <div style="width:{{ $pct }}%;height:100%;background:{{ $is_completed ? '#10b981' : 'var(--c-primary)' }};border-radius:99px;"></div>
+              <div style="width:{{ $pct }}%;height:100%;background:{{ $is_completed ? '#10b981' : 'linear-gradient(90deg,var(--c-primary-light),var(--c-primary))' }};border-radius:99px;"></div>
             </div>
             @if ($is_completed)
               @if (!empty($en['pdf_path']))
-                <button class="btn btn-sm" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;" onclick="viewCertificate('{{ htmlspecialchars($en['pdf_path']) }}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                <button class="btn btn-sm" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:8px;font-weight:700;" onclick="event.stopPropagation(); viewCertificate('{{ htmlspecialchars($en['pdf_path']) }}')">
                   Lihat Sertifikat
                 </button>
               @else
-                <button class="btn btn-sm" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;opacity:0.7;cursor:not-allowed" disabled>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                <button class="btn btn-sm" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:8px;font-weight:700;opacity:0.7;cursor:not-allowed" disabled onclick="event.stopPropagation()">
                   Sertifikat Diproses
                 </button>
               @endif
             @else
-            <button class="btn btn-outline btn-sm" style="width:100%" onclick="openCoursePlayer({{ $en['course_id'] }})">Lanjutkan Belajar</button>
+            <button class="btn btn-primary btn-sm" style="width:100%;border-radius:8px;font-weight:700;" onclick="event.stopPropagation(); openCoursePlayer({{ $en['course_id'] }})">Lanjutkan Belajar</button>
             @endif
           </div>
         </div>

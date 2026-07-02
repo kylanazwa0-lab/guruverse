@@ -173,6 +173,9 @@ textarea.dsk-form-input { resize: vertical; min-height: 110px; }
 }
 </style>
 
+<!-- ── List View Container ── -->
+<div id="diskusiListView">
+
 <!-- ── Hero ─────────────────────────────────────── -->
 <div class="diskusi-hero">
   <div class="diskusi-hero-text">
@@ -362,6 +365,66 @@ textarea.dsk-form-input { resize: vertical; min-height: 110px; }
       </div>
     </form>
   </div>
+</div><!-- /diskusiModal -->
+</div><!-- /diskusiListView -->
+
+<!-- ── Detail Diskusi & Balasan (Full Page) ──────────────────────────── -->
+<div id="diskusiDetailView" style="display: none; padding-bottom: 30px;">
+  <div style="margin-bottom: 20px;">
+    <button class="btn btn-white" onclick="closeDiskusiDetailModal()" style="font-size:13px; padding:8px 16px; border-radius:10px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Kembali ke Diskusi
+    </button>
+  </div>
+
+  <div style="background: var(--c-card); border: 1px solid var(--c-border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+    
+    <div style="padding: 24px 28px; background: var(--c-bg-card); border-bottom: 1px dashed var(--c-border);">
+      <h3 style="font-size: 20px; font-weight: 800; color: var(--c-text); margin-bottom: 16px; line-height: 1.4" id="detailModalTitle">Memuat Topik...</h3>
+      
+      <!-- Original Topic Body -->
+      <div style="display: flex; gap: 14px;">
+        <div class="topic-avatar" id="detailModalAvatar" style="width: 48px; height: 48px; font-size: 16px;"></div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-weight: 800; font-size: 14px; color: var(--c-text);" id="detailModalAuthor"></span>
+            <span style="font-size: 12px; color: var(--c-text-muted);" id="detailModalDate"></span>
+            <span class="topic-tag" id="detailModalCategory"></span>
+          </div>
+          <div style="font-size: 14px; color: var(--c-text); line-height: 1.6; white-space: pre-wrap;" id="detailModalBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 24px 28px; background: var(--c-bg);">
+      <!-- Replies Toggle Header -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; cursor: pointer; padding: 12px 16px; background: rgba(108,92,231,0.05); border-radius: 12px; border: 1px dashed var(--c-primary-light);" onclick="toggleReplies()">
+        <h4 style="font-size: 13px; font-weight: 800; color: var(--c-primary); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Balasan (<span id="detailModalReplyCount">0</span>)</h4>
+        <div style="font-size: 12px; font-weight: 700; color: var(--c-primary); display: flex; align-items: center; gap: 6px;">
+          <span id="toggleRepliesText">Lihat Balasan</span>
+          <svg id="toggleRepliesIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div id="detailModalRepliesContainer" style="display: none; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+        <!-- Replies injected here via JS -->
+      </div>
+    </div>
+
+    <!-- Reply Form -->
+    <div style="padding: 24px 28px; border-top: 1px solid var(--c-border); background: var(--c-bg-card);">
+      <form onsubmit="submitDiskusiReply(event)">
+        <input type="hidden" id="detailModalTopicId">
+        <label style="font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 10px; display: block;">Tulis Balasan Anda</label>
+        <textarea class="dsk-form-input" id="replyContent" placeholder="Ketik balasan untuk membantu atau menanggapi..." required style="min-height: 100px; resize: vertical; border-radius: 12px; margin-bottom: 16px;"></textarea>
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary" style="border-radius: 12px; padding: 12px 28px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px;" id="btnSubmitReply">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Kirim Balasan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 </div><!-- /page-diskusi -->
@@ -487,6 +550,159 @@ function deleteTopic(id) {
   .catch(function () {
     showPage('diskusi');
   });
+}
+
+function getInitials(name) {
+    if (!name) return 'U';
+    var parts = name.split(' ');
+    var initials = parts[0].charAt(0).toUpperCase();
+    if (parts.length > 1 && parts[1].length > 0) {
+        initials += parts[1].charAt(0).toUpperCase();
+    } else if (parts[0].length > 1) {
+        initials += parts[0].charAt(1).toUpperCase();
+    }
+    return initials;
+}
+
+function toggleReplies() {
+    var container = document.getElementById('detailModalRepliesContainer');
+    var text = document.getElementById('toggleRepliesText');
+    var icon = document.getElementById('toggleRepliesIcon');
+    
+    if (container.style.display === 'none') {
+        container.style.display = 'flex';
+        text.textContent = 'Sembunyikan Balasan';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        container.style.display = 'none';
+        text.textContent = 'Lihat Balasan';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function openDiskusiDetail(id) {
+    document.getElementById('detailModalTopicId').value = id;
+    document.getElementById('detailModalTitle').textContent = 'Memuat Topik...';
+    document.getElementById('detailModalBody').innerHTML = '';
+    document.getElementById('detailModalRepliesContainer').innerHTML = '<div style="text-align:center; padding: 20px; color:var(--c-text-muted);">Memuat balasan...</div>';
+    
+    // Reset toggle state
+    document.getElementById('detailModalRepliesContainer').style.display = 'none';
+    document.getElementById('toggleRepliesText').textContent = 'Lihat Balasan';
+    document.getElementById('toggleRepliesIcon').style.transform = 'rotate(0deg)';
+
+    // SPA View Switch
+    document.getElementById('diskusiListView').style.display = 'none';
+    document.getElementById('diskusiDetailView').style.display = 'block';
+
+    fetch('/diskusi/api/' + id)
+        .then(r => r.json())
+        .then(res => {
+            if (res.success && res.data) {
+                const data = res.data;
+                document.getElementById('detailModalTitle').textContent = data.title;
+                document.getElementById('detailModalAuthor').textContent = data.author_name;
+                
+                const d = new Date(data.created_at);
+                document.getElementById('detailModalDate').textContent = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+                
+                document.getElementById('detailModalCategory').textContent = data.category || 'Umum';
+                document.getElementById('detailModalBody').textContent = data.body;
+                document.getElementById('detailModalAvatar').textContent = getInitials(data.author_name);
+                document.getElementById('detailModalReplyCount').textContent = data.replies_count;
+
+                const rc = document.getElementById('detailModalRepliesContainer');
+                rc.innerHTML = '';
+
+                if (data.replies && data.replies.length > 0) {
+                    data.replies.forEach(reply => {
+                        const rd = new Date(reply.created_at);
+                        const dateStr = rd.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' ' + rd.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                        
+                        let badgeHtml = '';
+                        let avatarColor = 'var(--c-bg)';
+                        let textColor = 'var(--c-text-muted)';
+                        
+                        if (reply.is_bot) {
+                            badgeHtml = '<span style="background:#10b981; color:#fff; font-size:9px; padding:2px 6px; border-radius:10px; font-weight:800; margin-left:8px;">BOT</span>';
+                            avatarColor = 'rgba(16, 185, 129, 0.1)';
+                            textColor = '#10b981';
+                        }
+
+                        rc.innerHTML += `
+                        <div style="display:flex; gap:12px; background:var(--c-bg-card); padding:16px; border-radius:12px; border:1px solid var(--c-border-light);">
+                            <div class="topic-avatar" style="width:36px; height:36px; font-size:13px; background:${avatarColor}; color:${textColor}; border:1px solid var(--c-border);">${getInitials(reply.author_name)}</div>
+                            <div style="flex:1;">
+                                <div style="display:flex; align-items:center; margin-bottom:6px;">
+                                    <span style="font-weight:700; font-size:13px; color:var(--c-text);">${reply.author_name}</span>
+                                    ${badgeHtml}
+                                    <span style="font-size:11px; color:var(--c-text-muted); margin-left:auto;">${dateStr}</span>
+                                </div>
+                                <div style="font-size:13px; color:var(--c-text); line-height:1.6; white-space:pre-wrap;">${reply.body}</div>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    rc.innerHTML = '<div style="text-align:center; padding:20px; color:var(--c-text-muted); font-size:13px;">Belum ada balasan. Jadilah yang pertama membalas!</div>';
+                }
+            } else {
+                closeDiskusiDetailModal();
+                alert('Gagal memuat detail diskusi.');
+            }
+        })
+        .catch(err => {
+            closeDiskusiDetailModal();
+            alert('Terjadi kesalahan koneksi.');
+        });
+}
+
+function closeDiskusiDetailModal() {
+    document.getElementById('diskusiDetailView').style.display = 'none';
+    document.getElementById('diskusiListView').style.display = 'block';
+    document.getElementById('replyContent').value = '';
+}
+
+function submitDiskusiReply(e) {
+    e.preventDefault();
+    var topicId = document.getElementById('detailModalTopicId').value;
+    var content = document.getElementById('replyContent').value.trim();
+    
+    if (!topicId || !content) return;
+    
+    var btn = document.getElementById('btnSubmitReply');
+    btn.disabled = true;
+    btn.innerHTML = 'Mengirim...';
+
+    fetch('/diskusi/api/reply', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: 'discussion_id=' + encodeURIComponent(topicId) + '&body=' + encodeURIComponent(content)
+    })
+    .then(r => r.json())
+    .then(d => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Kirim';
+        
+        if (d.success) {
+            document.getElementById('replyContent').value = '';
+            // Reload the discussion details to show the new reply
+            openDiskusiDetail(topicId);
+            
+            // Note: Since this is SPA-like, we might also want to refresh the topic list in the background
+            // but for now, showing the reply in the modal is enough. When they close it, 
+            // they can see the updated count if they refresh, or we just leave it.
+        } else {
+            alert(d.message || 'Gagal mengirim balasan.');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = 'Kirim';
+        alert('Terjadi kesalahan koneksi.');
+    });
 }
 </script>
 

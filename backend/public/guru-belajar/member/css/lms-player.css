@@ -3,11 +3,13 @@
    Menggunakan design tokens dari style.css agar adaptif terhadap Dark Mode
    ================================================================ */
 
-/* Layout Utama */
+/* Layout Utama — mengisi penuh main-layout, tanpa max-width fixed */
 .cp-layout {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* Header Section */
@@ -55,33 +57,39 @@
   padding: 16px 24px;
   border-radius: var(--r-card);
   border: 1px solid var(--c-border);
-  min-width: 240px;
   box-shadow: var(--shadow-card);
+  min-width: 0;
 }
 
-/* 2 Columns Grid (Left Menu & Main Content) */
+/* 2 Columns Grid (Left Panel & Main Content) */
 .cp-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 260px 1fr;
   gap: 24px;
   align-items: start;
+  min-width: 0;
+  width: 100%;
 }
 
-/* Panels (Sidebar & Content) */
+/* Panels */
 .cp-panel {
   background: var(--c-card);
   border-radius: var(--r-card);
   border: 1px solid var(--c-border);
   padding: 20px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .cp-panel-main {
   padding: 32px;
+  min-width: 0;
 }
 
 .cp-panel-sticky {
   position: sticky;
-  top: 24px;
+  top: calc(var(--topbar-h, 64px) + 24px);
+  min-width: 0;
 }
 
 .cp-section-title {
@@ -154,7 +162,7 @@
 /* Video Player Container */
 .cp-video-container {
   aspect-ratio: 16/9;
-  background: linear-gradient(135deg, #0f172a, #020617); /* Selalu gelap untuk video */
+  background: linear-gradient(135deg, #0f172a, #020617);
   border-radius: var(--r-card);
   overflow: hidden;
   margin-bottom: 32px;
@@ -163,6 +171,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .cp-video-play-btn {
@@ -190,13 +199,13 @@
   width: 100%;
   padding: 20px;
   background: linear-gradient(transparent, rgba(0,0,0,0.9));
-  color: #fff; /* Teks kontrol video selalu putih */
+  color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Materi & Download Links */
+/* Download Links */
 .cp-dl-card {
   flex: 1;
   min-width: 150px;
@@ -241,6 +250,7 @@
   background: var(--c-bg);
   color: var(--c-text);
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .cp-textarea:focus {
@@ -300,24 +310,43 @@
   color: var(--c-text);
   font-size: 16px;
   margin: 0 auto 16px;
+  flex-shrink: 0;
 }
 
-/* Responsive Overrides */
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 1200px) {
+  .cp-grid {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
 @media (max-width: 1024px) {
   .cp-grid {
-    grid-template-columns: 280px 1fr;
-  }
-  .cp-right-sidebar {
-    display: none;
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .cp-grid {
     grid-template-columns: 1fr;
+  }
+  .cp-panel-sticky {
+    position: static;
   }
   .cp-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .cp-panel-main {
+    padding: 16px;
+  }
+  .cp-title {
+    font-size: 20px;
   }
 }

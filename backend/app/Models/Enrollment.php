@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Enrollment extends Model
 {
     protected $table = 'gb_enrollments';
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id', 'course_id', 'status', 'progress_percent',
-        'enrolled_at', 'completed_at',
+        'enrolled_at', 'completed_at', 'completed_modules',
     ];
 
     protected $casts = [

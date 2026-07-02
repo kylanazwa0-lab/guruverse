@@ -58,6 +58,7 @@ a{text-decoration:none;}
   --secondary: #76D4E2;
   --secondary-dark: #2d93a4;
   --bg: #F5F8FA;
+  --card: #ffffff;
   --border: #D2E3EB;
   --text: #092B40;
   --text-muted: #3D6175;
@@ -72,7 +73,7 @@ a{text-decoration:none;}
 [data-theme="light"] .nav-link { color: rgba(255, 255, 255, 0.75) !important; }
 [data-theme="light"] .nav-link:hover { color: #ffffff !important; background: rgba(255, 255, 255, 0.1) !important; }
 [data-theme="light"] .nav-mobile { background: #ffffff !important; border-color: var(--border) !important; }
-[data-theme="light"] .hero { background: linear-gradient(135deg, #EEF2FF 0%, var(--bg) 100%); }
+[data-theme="light"] .hero { background: var(--bg); }
 [data-theme="light"] .hero-title { color: var(--primary) !important; }
 [data-theme="light"] .hero-subtitle { color: var(--text) !important; }
 [data-theme="light"] .hero-eyebrow { color: var(--secondary) !important; }
@@ -102,7 +103,7 @@ a{text-decoration:none;}
 [data-theme="light"] .detail-navbar { background: #093C5D !important; border-color: rgba(255, 255, 255, 0.15) !important; }
 [data-theme="light"] .detail-navbar .nav-link { color: rgba(255, 255, 255, 0.75) !important; }
 [data-theme="light"] .detail-navbar .nav-link:hover { color: #ffffff !important; background: rgba(255, 255, 255, 0.1) !important; }
-[data-theme="light"] .detail-hero { background: linear-gradient(135deg, #EEF2FF 0%, var(--bg) 100%); }
+[data-theme="light"] .detail-hero { background: var(--bg); }
 [data-theme="light"] .detail-title { color: var(--primary); }
 [data-theme="light"] .detail-subtitle { color: var(--text-muted); }
 [data-theme="light"] .detail-quote { background: rgba(9, 60, 93, 0.08) !important; border-left-color: var(--primary) !important; }
@@ -605,7 +606,25 @@ a{text-decoration:none;}
   .detail-btns{flex-direction:column}
   .detail-btns .btn-primary,.detail-btns .btn-secondary{text-align:center}
 }
+
+/* Lenis Smooth Scroll CSS */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
 </style>
+  @stack('styles')
 </head>
 <body>
 
@@ -623,18 +642,35 @@ a{text-decoration:none;}
            style="height:36px; border:none; object-fit:contain;">
     </a>
     <div class="nav-links">
-      <a class="nav-link" id="nav-index" href="{{ route('home') }}">Beranda</a>
-      <a class="nav-link" id="nav-about" href="{{ route('about') }}">Tentang Kami</a>
-      <a class="nav-link" id="nav-program" href="{{ route('program') }}">Program</a>
-      <a class="nav-link" id="nav-testimoni" href="{{ route('testimoni') }}">Testimoni</a>
-      <a class="nav-link" id="nav-artikel" href="{{ route('artikel') }}">Artikel</a>
+      <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" id="nav-index" href="{{ route('home') }}">Beranda</a>
+      <a class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}" id="nav-about" href="{{ route('about') }}">Tentang Kami</a>
+      <a class="nav-link {{ request()->routeIs('program', 'public.products', 'learn-more*', 'guru-*', 'info.*') ? 'active' : '' }}" id="nav-program" href="{{ route('program') }}">Program</a>
+      <a class="nav-link {{ request()->routeIs('artikel*') ? 'active' : '' }}" id="nav-artikel" href="{{ route('artikel') }}">Artikel</a>
+      
       @auth('web')
-        <a class="nav-link" href="{{ route('member.dashboard') }}">Dashboard</a>
+        <a class="nav-link {{ request()->is('member*') ? 'active' : '' }}" href="{{ route('member.dashboard') }}">Dashboard</a>
         <a class="nav-link" href="{{ route('logout') }}">Keluar</a>
       @else
-        <a class="nav-link" href="{{ route('login') }}">Masuk</a>
-        <a class="nav-link" href="{{ route('register') }}">Daftar</a>
+        <a class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ route('login') }}">Masuk</a>
+        <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}" href="{{ route('register') }}">Daftar</a>
       @endauth
+      
+      @php
+        $cartCount = \App\Models\CartItem::whereHas('cart', function($q) {
+            if (auth('web')->check()) {
+                $q->where('user_id', auth('web')->id());
+            } else {
+                $q->where('session_id', session()->getId())->whereNull('user_id');
+            }
+        })->sum('quantity');
+      @endphp
+      <a href="{{ route('cart.view') }}" class="theme-toggle-btn {{ request()->routeIs('cart.*') ? 'active' : '' }}" title="Keranjang Belanja" style="position: relative; margin-right: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        @if($cartCount > 0)
+        <span style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">{{ $cartCount }}</span>
+        @endif
+      </a>
+
       {{-- Dark/Light Mode Toggle --}}
       <button class="theme-toggle-btn" id="globalThemeToggle" onclick="toggleDarkMode()" title="Ganti Mode Tampilan" aria-label="Toggle Dark Mode">
         <span class="icon-moon">
@@ -652,18 +688,26 @@ a{text-decoration:none;}
   </div>
 </nav>
 <div class="nav-mobile" id="navMobile">
-  <a class="nav-link" href="{{ route('home') }}">Beranda</a>
-  <a class="nav-link" href="{{ route('about') }}">Tentang Kami</a>
-  <a class="nav-link" href="{{ route('program') }}">Program</a>
-  <a class="nav-link" href="{{ route('testimoni') }}">Testimoni</a>
-  <a class="nav-link" href="{{ route('artikel') }}">Artikel</a>
+  <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Beranda</a>
+  <a class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ route('about') }}">Tentang Kami</a>
+  <a class="nav-link {{ request()->routeIs('program', 'public.products', 'learn-more*', 'guru-*', 'info.*') ? 'active' : '' }}" href="{{ route('program') }}">Program</a>
+  <a class="nav-link {{ request()->routeIs('artikel*') ? 'active' : '' }}" href="{{ route('artikel') }}">Artikel</a>
+  
   @auth('web')
-    <a class="nav-link" href="{{ route('member.dashboard') }}">Dashboard</a>
+    <a class="nav-link {{ request()->is('member*') ? 'active' : '' }}" href="{{ route('member.dashboard') }}">Dashboard</a>
     <a class="nav-link" href="{{ route('logout') }}">Keluar</a>
   @else
-    <a class="nav-link" href="{{ route('login') }}">Masuk</a>
-    <a class="nav-link" href="{{ route('register') }}">Daftar</a>
+    <a class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ route('login') }}">Masuk</a>
+    <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}" href="{{ route('register') }}">Daftar</a>
   @endauth
+  
+  <a class="nav-link {{ request()->routeIs('cart.*') ? 'active' : '' }}" href="{{ route('cart.view') }}" style="display: flex; justify-content: space-between; align-items: center;">
+    Keranjang Belanja
+    @if(isset($cartCount) && $cartCount > 0)
+      <span style="background: #ef4444; color: white; font-size: 10px; font-weight: bold; border-radius: 10px; padding: 2px 8px;">{{ $cartCount }}</span>
+    @endif
+  </a>
+
   <button class="nav-cta" style="margin-top:8px;border-radius:10px" onclick="window.open('https://wa.me/6283133531303','_blank')">Contact Us</button>
 </div>
 
@@ -671,6 +715,126 @@ a{text-decoration:none;}
 @yield('content')
 
 {{-- ===== FOOTER (dari footer.php) ===== --}}
+{{-- ===== ANIMATION SYSTEM: Pure CSS + Intersection Observer ===== --}}
+<style>
+/* === ZAJNO-STYLE ANIMATION SYSTEM === */
+
+/* 1. Fade Up - default hidden state */
+.gv-reveal {
+  opacity: 0;
+  transform: translateY(60px) rotate(1.5deg);
+  transform-origin: left center;
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+/* 2. When observer triggers */
+.gv-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+
+/* 3. Stagger delays */
+.gv-reveal.delay-1 { transition-delay: 0.1s; }
+.gv-reveal.delay-2 { transition-delay: 0.2s; }
+.gv-reveal.delay-3 { transition-delay: 0.3s; }
+.gv-reveal.delay-4 { transition-delay: 0.4s; }
+.gv-reveal.delay-5 { transition-delay: 0.5s; }
+
+/* 4. Parallax container */
+.gv-parallax-wrap {
+  overflow: hidden;
+}
+.gv-parallax-img {
+  transform: scale(1.15);
+  transition: transform 0.1s linear;
+  will-change: transform;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+// ========================================================
+// GURUVERSE ANIMATION ENGINE
+// Strategy:
+//  - Smooth scroll: native CSS scroll-behavior (no CDN risk)
+//  - Fade up: Intersection Observer + CSS transitions (100% reliable)
+//  - Parallax: GSAP ScrollTrigger (only for parallax, not fade)
+// ========================================================
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ---- SMOOTH SCROLL via CSS (zero dependency) ----
+document.documentElement.style.scrollBehavior = 'smooth';
+
+// ---- INTERSECTION OBSERVER for Fade Animations ----
+let revealObserver = null;
+
+function initRevealObserver() {
+  // Disconnect existing observer
+  if (revealObserver) revealObserver.disconnect();
+
+  revealObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      } else {
+        // Remove class so it re-animates when scrolled back into view
+        entry.target.classList.remove('is-visible');
+      }
+    });
+  }, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -60px 0px'
+  });
+
+  // Only watch elements with gv-reveal
+  const targets = document.querySelectorAll('.gv-reveal');
+  targets.forEach(function(el) {
+    revealObserver.observe(el);
+  });
+}
+
+// ---- GSAP PARALLAX (zoom-out on scroll) ----
+function initParallax() {
+  ScrollTrigger.getAll().forEach(t => t.kill());
+
+  const parallaxElems = document.querySelectorAll('.gv-parallax-img');
+  parallaxElems.forEach(function(elem) {
+    gsap.to(elem, {
+      yPercent: 18,
+      scale: 1,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: elem.closest('.gv-parallax-wrap') || elem.parentElement,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.5
+      }
+    });
+  });
+
+  ScrollTrigger.refresh();
+}
+
+// ---- MASTER INIT ----
+function initGlobalAnimations() {
+  initRevealObserver();
+  initParallax();
+}
+
+window.initGlobalAnimations = initGlobalAnimations;
+
+// ---- BOOT on DOM ready ----
+document.addEventListener('DOMContentLoaded', function() {
+  // Small delay to ensure SPA has set .page.on
+  setTimeout(initGlobalAnimations, 150);
+});
+</script>
+
 <script>
 function toggleMenu(){
   const m=document.getElementById('navMobile');
@@ -702,5 +866,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+  @stack('scripts')
 </body>
 </html>

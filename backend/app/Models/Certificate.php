@@ -9,26 +9,30 @@ class Certificate extends Model
 {
     use HasFactory;
 
+    protected $table = 'gb_certificates';
+
     protected $fillable = [
-        'student_id',
+        'user_id',
         'course_id',
-        'file_url',
         'certificate_number',
         'issued_at',
+        'is_verified',
+        'pdf_path',
     ];
 
     protected $casts = [
         'issued_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'is_verified' => 'boolean',
     ];
 
     /**
-     * Relation: Certificate belongs to Student (User)
+     * Relation: Certificate belongs to Member (User)
      */
-    public function student()
+    public function member()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Member::class, 'user_id');
     }
 
     /**

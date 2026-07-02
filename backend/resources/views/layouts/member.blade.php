@@ -41,9 +41,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flyonui/dist/full.min.css">
-<link rel="stylesheet" href="/guru-belajar/member/css/style.css">
-<link rel="stylesheet" href="/guru-belajar/member/css/lms-player.css">
+<!-- Tabler Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="/guru-belajar/member/css/style.css?v={{ time() }}">
+<link rel="stylesheet" href="/guru-belajar/member/css/lms-player.css?v={{ time() }}">
 @yield('styles')
 </head>
 <body>
@@ -79,9 +80,13 @@
       <a class="nav-item {{ Route::is('member.quiz') ? 'active' : '' }}" href="{{ route('member.quiz') }}">
         <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span> <span class="nav-text">Evaluasi / Quiz</span>
       </a>
+      <a class="nav-item {{ Route::is('member.pelatihan') ? 'active' : '' }}" href="{{ route('member.pelatihan') }}">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span> <span class="nav-text">Pelatihan Online</span>
+      </a>
       <a class="nav-item {{ Route::is('member.perpustakaan') ? 'active' : '' }}" href="{{ route('member.perpustakaan') }}">
         <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></span> <span class="nav-text">Jendela Dunia</span>
       </a>
+
       
       <span class="nav-label">Komunitas</span>
       <a class="nav-item {{ Route::is('member.diskusi') ? 'active' : '' }}" href="{{ route('member.diskusi') }}">
@@ -122,9 +127,16 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </span>
       </button>
-      <button class="notif-btn" onclick="toggleNotif()">
+      <!-- Cart count dibaca dari localStorage (cart disimpan di browser) -->
+      <a href="{{ route('member.cart') }}" class="notif-btn" title="Keranjang" style="text-decoration:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <span class="notif-count" id="layoutCartCount" style="display:none;"></span>
+      </a>
+      <button class="notif-btn" id="notifBtn" onclick="toggleNotif()">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        @if ($unread_notif_count > 0)
+        @if (isset($unread_notif_count) && $unread_notif_count > 0)
           <span class="notif-count">{{ $unread_notif_count }}</span>
         @endif
       </button>
@@ -213,7 +225,24 @@
   <!-- MAIN LAYOUT CONTENT -->
   <main class="main-layout">
     @yield('content')
+
+    <!-- MEMBER FOOTER -->
+    <footer style="margin-top:40px; padding:24px 0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; border-top:1px dashed var(--c-border); color:var(--c-text-muted);">
+      <div style="font-size:12px; color:var(--c-text-subtle);">
+        &copy; {{ date('Y') }} <strong>Guruverse</strong>. Hak Cipta Dilindungi.
+      </div>
+      <div style="display:flex; gap:20px; font-size:12px; font-weight:600;">
+        <a href="#" style="color:inherit; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--c-primary)'" onmouseout="this.style.color='var(--c-text-muted)'">Pusat Bantuan</a>
+        <a href="#" style="color:inherit; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--c-primary)'" onmouseout="this.style.color='var(--c-text-muted)'">Kebijakan Privasi</a>
+      </div>
+      <div style="display:flex; gap:16px;">
+        <a href="#" style="color:inherit; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--c-primary)'" onmouseout="this.style.color='var(--c-text-muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+        <a href="#" style="color:inherit; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--c-primary)'" onmouseout="this.style.color='var(--c-text-muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+        <a href="#" style="color:inherit; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--c-primary)'" onmouseout="this.style.color='var(--c-text-muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
+      </div>
+    </footer>
   </main>
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 </div>
 
 <!-- MODAL LOGOUT -->
@@ -272,7 +301,13 @@ function toggleDarkMode() {
 }
 
 function toggleSidebar() {
-  document.body.classList.toggle('sidebar-minimized');
+  if (window.innerWidth >= 992) {
+    document.body.classList.toggle('sidebar-minimized');
+    document.body.classList.remove('sidebar-open');
+  } else {
+    document.body.classList.toggle('sidebar-open');
+    document.body.classList.remove('sidebar-minimized');
+  }
 }
 
 function toggleNotif() {
@@ -280,8 +315,8 @@ function toggleNotif() {
 }
 
 document.addEventListener('click', e => {
-  const dd = document.getElementById('notifDropdown');
-  const btn = document.querySelector('.notif-btn');
+  const dd  = document.getElementById('notifDropdown');
+  const btn = document.getElementById('notifBtn');
   if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) {
     dd.classList.remove('open');
   }
@@ -383,6 +418,25 @@ function viewCertificate(path) {
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/flyonui/dist/js/index.min.js"></script>
+<script>
+// ── Update cart badge dari localStorage ───────────────────────────────────────
+function updateLayoutCartBadge() {
+  try {
+    const cart = JSON.parse(localStorage.getItem('gv_cart') || '[]');
+    const badge = document.getElementById('layoutCartCount');
+    if (!badge) return;
+    if (cart.length > 0) {
+      badge.textContent = cart.length;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {}
+}
+updateLayoutCartBadge();
+window.addEventListener('storage', updateLayoutCartBadge);
+</script>
 @yield('scripts')
+
 </body>
 </html>
