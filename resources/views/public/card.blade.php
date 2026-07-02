@@ -91,7 +91,7 @@
                     class="bg-slate-900 hover:bg-slate-700 text-white px-8 py-3 rounded-xl font-black transition">
                 🖨️ Simpan Kartu (PDF)
             </button>
-            <a href="index.php"
+            <a href="/dashboard"
                class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-6 py-3 rounded-xl font-black transition">
                 ← Kembali
             </a>

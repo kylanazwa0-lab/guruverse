@@ -231,6 +231,10 @@
      style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dark);text-decoration:none;">
      <i data-lucide="user" style="width:16px;"></i> Profil Saya
   </a>
+  <a href="/card?id={{ $member->member_id }}" target="_blank"
+     style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dark);text-decoration:none;">
+     <i data-lucide="credit-card" style="width:16px;"></i> Kartu Saya
+  </a>
   <div style="height:1px;background:var(--border);margin:4px 0"></div>
   <form action="{{ route('logout') }}" method="POST" id="logout-form-portal" style="display:none;">
     @csrf
@@ -275,7 +279,7 @@
   </div>
 
   <div class="portal-grid">
-    <a href="/dashboard" class="portal-card p-belajar">
+    <a href="/belajar" class="portal-card p-belajar">
       <img src="/asset/img/pilar_belajar_3d.png" class="portal-img">
       <div class="portal-body">
         <div class="portal-head">

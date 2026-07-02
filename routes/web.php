@@ -55,8 +55,8 @@ Route::post('/logout', [LoginController::class, 'logout']);
 Route::middleware(['auth:web', 'session.validate'])->group(function () {
 
     // Member Dashboard & Pages
-    Route::get('/member/portal', [MemberDashboardController::class, 'portal'])->name('member.portal');
-    Route::get('/dashboard', [MemberDashboardController::class, 'index'])->name('member.dashboard');
+    Route::get('/dashboard', [MemberDashboardController::class, 'portal'])->name('member.portal');
+    Route::get('/belajar', [MemberDashboardController::class, 'index'])->name('member.dashboard');
     Route::get('/kelas', [\App\Http\Controllers\MemberCourseController::class, 'kelas'])->name('member.kelas');
     Route::get('/modul', [\App\Http\Controllers\MemberCourseController::class, 'modul'])->name('member.modul');
     Route::get('/sertifikat', [\App\Http\Controllers\MemberCourseController::class, 'sertifikat'])->name('member.sertifikat');

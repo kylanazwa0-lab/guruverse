@@ -74,7 +74,7 @@ class LoginController extends Controller
                 $request->session()->put('member_logged_in', true);
                 $request->session()->put('member_login_at', time());
 
-                return redirect()->intended('/guru-belajar/member/home_member.php');
+                return redirect()->intended('/dashboard');
             }
         }
 

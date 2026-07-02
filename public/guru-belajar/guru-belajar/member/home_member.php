@@ -1,4 +1,6 @@
 <?php
+header("Location: /dashboard");
+exit;
 session_start();
 
 // Cek session — gunakan member_int_id ATAU member_id (konsisten dengan sistem login)

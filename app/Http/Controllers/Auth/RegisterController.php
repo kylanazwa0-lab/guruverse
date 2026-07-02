@@ -55,6 +55,6 @@ class RegisterController extends Controller
         $request->session()->put('member_login_at', time());
 
         // Redirect ke dashboard
-        return redirect('/guru-belajar/member/home_member.php')->with('success', 'Registrasi berhasil! Selamat datang di Guruverse.');
+        return redirect('/dashboard')->with('success', 'Registrasi berhasil! Selamat datang di Guruverse.');
     }
 }
